@@ -49,7 +49,7 @@
 
 		//Create tiff object, read and store header info for atanb tiff
 
-		tiffIO twigrid(twifile, LONG_TYPE);
+		tiffIO twigrid(twifile, FLOAT_TYPE);
 	/*	long totalX1= atanbgrid.getTotalX();
 		long totalY1 = atanbgrid.getTotalY();
 		double dx1 = atanbgrid.getdx();
