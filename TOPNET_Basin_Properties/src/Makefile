@@ -48,7 +48,7 @@ SHAPEFILES = shape/cell.o shape/dbf.o shape/exception.o shape/field.o shape/item
 #OBJFILES includes classes, structures, and constants common to all files
 OBJFILES = commonLib.o tiffIO.o
 
-BAPARM = Basin_parammn.o Basin_param.o $(OBJFILES) $(SHAPEFILES)
+BAPARM = BasinParammn.o BasinParam.o $(OBJFILES)
 DISWET = Distance_Wetnessmn.o Distance_Wetness.o $(OBJFILES) 
 RAINWEIGHT= RainWeightmn.o triangle.o rainweight.o $(OBJFILES) $(SHAPEFILES)
 REACHLINK = Reach_Linkmn.o Reach_Link.o  $(OBJFILES) $(SHAPEFILES)
@@ -58,7 +58,7 @@ CC =mpic++
 CFLAGS +=-O2
 
 DEBUG = -g
-CFLAGS  = -std=c++0x $(DEBUG)
+CFLAGS  += -std=c++0x $(DEBUG)
 
 LARGEFILEFLAG= -D_FILE_OFFSET_BITS=64
 LDLIBS = -L"/home/A01769693/gdal/lib" -lgdal
@@ -67,8 +67,8 @@ LDLIBS = -L"/home/A01769693/gdal/lib" -lgdal
 
 
 #Rules: when and how to make a file
-all : ../BasinParam ../DistWetness ../RainWeight ../ReachLink 
-../BasinParam : $(BAPARM)
+all : ../BasinParammeter ../DistWetness ../RainWeight ../ReachLink 
+../BasinParammeter : $(BAPARM)
 	$(CC) $(CFLAGS) -o $@ $(LIBDIRS) $(BAPARM) $(LDLIBS) $(LDFLAGS)
 
 ../DistWetness : $(DISWET)
