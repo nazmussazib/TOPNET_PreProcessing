@@ -12,6 +12,7 @@
 #include "createpart.h"
 #include "tiffIO.h"
 #include "shape/shapefile.h"
+
 //// Defines needed for triangle
 //#define REAL double
 //#define ANSI_DECLARATORS
@@ -266,7 +267,16 @@ int mepsetup (char *mefile, char*parspecfile, char *nodelinkfile, char *meparfil
 			}
 		}	
 
-	fpn=fopen(nodelinkfile,"r");
+	
+	 
+	string nodelink= nodelinkfile; //mesin = model element secondary input e.g. lutluc.txt : look up table information
+										      
+       char *nodefile=new char[nodelink.size()];
+											
+       strcpy(nodefile,nodelink.c_str());
+
+    
+	fpn=fopen(nodefile,"r");
 
 	
 
@@ -288,31 +298,28 @@ int mepsetup (char *mefile, char*parspecfile, char *nodelinkfile, char *meparfil
     cnet[i] = new float[nlmax];
 	 
 	
-	fpn=fopen(nodelinkfile,"r");
+	fpn=fopen(nodefile,"r");
 	if(fpn==NULL) return (10);
-
-
- 
-                        string var2= nodelinkfile;
-						char *varname2=new char[var2.size()+1];
-
-	ifstream stream(var2.c_str());
+	ifstream stream(nodefile);
     
     getline(stream, dummyLine);
 	
 	
 	for(j=0;j<nlmax;j++)
 	{
-		for ( int ii=0;ii<10;ii++)
-		{
-			fscanf(fpn,"%f%*c", &cnet[ii][j]);
-		}
-		//eol2(fpn);
+		getline(stream, dummyLine);
+std::string input =  dummyLine;
+std::istringstream ss(input);
+std::string token;
+int ii=0;
+while(std::getline(ss, token, ',')) {
+    //std::cout << token << '\n';
+    
+   cnet[ii][j]=atof(token.c_str());
+    ii=ii+1;
+}
 	}
-	fclose(fpn);
-
-
-	
+	fclose(fpn);	
 
 
 
@@ -348,33 +355,24 @@ int mepsetup (char *mefile, char*parspecfile, char *nodelinkfile, char *meparfil
 			for (it=myvector.begin(); it!=myvector.end(); it++) 
 			    {
 
-					fprintf(fp1,"%d,",g+1);
-			   fprintf(fp1,"%d,", int(cnet[1][g]));
-				fprintf(fp1,"%d,",int (cnet[2][g]));
-				fprintf(fp1,"%d,", int(cnet[3][g]));
-				fprintf(fp1,"%d,",int (cnet[5][g]));
+			       fprintf(fp1,"%d,",g+1);
+			       fprintf(fp1,"%d,", (int)cnet[1][g]);
+				fprintf(fp1,"%d,",(int) cnet[2][g]);
+				fprintf(fp1,"%d,", (int)cnet[3][g]);
+				fprintf(fp1,"%d,",(int) cnet[5][g]);
 				fprintf(fp1,"%g,", cnet[8][g]);
 				fprintf(fp1,"%g,", cnet[9][g]);
 				fprintf(fp1,"%g,",cnet[6][g]*1000000);
-
-					for (int ij=0;ij<(nlmax1);ij++) 
+                             for (int ij=0;ij<(nlmax1);ij++) 
 						fprintf(fp1,"%g,",mat1[*it][ij]);
 			
 			   fprintf(fp1,"%\n");
 			   g=g+1;
 		  }
 
-		  
+fclose(fp1);
 
-	        fclose(fp1);
-
-
-
-
-
-	
-
-	   } 
+  } 
 
     MPI_Finalize();
 	
