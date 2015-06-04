@@ -5,14 +5,14 @@ import gdal,ogr
 import sys
 
 def watershed_delineation(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,Outlet,Src_threshold,Min_threshold,Max_threshold,Number_threshold):
-    subprocess.call(PITREMOVE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
-    subprocess.call(D8FLOWDIRECTIONS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
-    subprocess.call(D8CONTRIBUTING_AREA(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
-    subprocess.call(THRESHOLD(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,Src_threshold))
-    subprocess.call(MOVEOUTLETTOSTREAMS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,Outlet))
-    subprocess.call(PEUKERDOUGLAS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
-    subprocess.call(ACCUMULATING_STREAM_SOURCE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
-    subprocess.call(DROP_ANALYSIS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,Min_threshold,Max_threshold,Number_threshold))
+    os.system(PITREMOVE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
+    os.system(D8FLOWDIRECTIONS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
+    os.system(D8CONTRIBUTING_AREA(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
+    os.system(THRESHOLD(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,Src_threshold))
+    os.system(MOVEOUTLETTOSTREAMS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,Outlet))
+    os.system(PEUKERDOUGLAS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
+    os.system(ACCUMULATING_STREAM_SOURCE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
+    os.system(DROP_ANALYSIS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,Min_threshold,Max_threshold,Number_threshold))
     fileHandle = open (os.path.join(In_Out_dir,Input_Dem+"drp.txt"),"r")
     lineList = fileHandle.readlines()
     fileHandle.close()
@@ -23,16 +23,16 @@ def watershed_delineation(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,Outlet,Src_
     else:
         thres=float(Max_threshold)
 
-    subprocess.call(STREAM_SOURCE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,thres))
-    subprocess.call(StreamNet(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
-    subprocess.call(WETNESS_INDEX(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
-    subprocess.call(DISTANCE_DOWNSTREAM(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
+    os.system(STREAM_SOURCE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,thres))
+    os.system(StreamNet(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
+    os.system(WETNESS_INDEX(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
+    os.system(DISTANCE_DOWNSTREAM(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem))
 
 
 def PITREMOVE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "PitRemove"));commands.append("-z")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-n");commands.append(str(np));commands.append("--allow-run-as-root")
+    commands.append(os.path.join(TauDEM_dir, "pitremove"));commands.append("-z")
     commands.append(os.path.join(In_Out_dir,Input_Dem+".tif"));commands.append("-fel")
     commands.append(os.path.join(In_Out_dir, Input_Dem+"fel.tif"))
     fused_command = ''.join(['"%s" ' % c for c in commands])
@@ -40,8 +40,9 @@ def PITREMOVE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
 
 def D8FLOWDIRECTIONS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "D8Flowdir"));commands.append("-p")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(TauDEM_dir, "d8flowdir"));commands.append("-p")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"p.tif"));commands.append("-sd8")
     commands.append(os.path.join(In_Out_dir, Input_Dem+"sd8.tif"));commands.append("-fel")
     commands.append(os.path.join(In_Out_dir, Input_Dem+"fel.tif"))
@@ -50,8 +51,9 @@ def D8FLOWDIRECTIONS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
 
 def D8CONTRIBUTING_AREA(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "AreaD8"));commands.append("-p")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(TauDEM_dir, "aread8"));commands.append("-p")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"p.tif"));commands.append("-ad8")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"ad8.tif"))
     fused_command = ''.join(['"%s" ' % c for c in commands])
@@ -59,8 +61,9 @@ def D8CONTRIBUTING_AREA(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
 
 def DINFFLOWDIRECTIONS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "DinfFlowdir"));commands.append("-ang")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(TauDEM_dir, "dinfflowdir"));commands.append("-ang")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"ang.tif"));commands.append("-slp")
     commands.append(os.path.join(In_Out_dir, Input_Dem+"slp.tif"));commands.append("-fel")
     commands.append(os.path.join(In_Out_dir, Input_Dem+"fel.tif"))
@@ -69,8 +72,9 @@ def DINFFLOWDIRECTIONS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
 
 def DINFCONTRIBUTINGAREA(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "AreaDinf"));commands.append("-ang")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(TauDEM_dir, "areadinf"));commands.append("-ang")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"ang.tif"));commands.append("-sca")
     commands.append(os.path.join(In_Out_dir, Input_Dem+"sca.tif"));
     fused_command = ''.join(['"%s" ' % c for c in commands])
@@ -79,8 +83,9 @@ def DINFCONTRIBUTINGAREA(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
 
 def THRESHOLD(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,Src_threshold):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "Threshold"));commands.append("-ssa")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(TauDEM_dir, "threshold"));commands.append("-ssa")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"ad8.tif"));commands.append("-src")
     commands.append(os.path.join(In_Out_dir, Input_Dem+"src.tif"));commands.append("-thresh");commands.append(str(Src_threshold))
     fused_command = ''.join(['"%s" ' % c for c in commands])
@@ -88,8 +93,9 @@ def THRESHOLD(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,Src_threshold):
 
 def MOVEOUTLETTOSTREAMS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,Outlet):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "moveoutletstostreams"));commands.append("-p")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(TauDEM_dir, "moveoutletstostrm"));commands.append("-p")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"p.tif"));commands.append("-src")
     commands.append(os.path.join(In_Out_dir, Input_Dem+"src.tif"));commands.append("-o");commands.append(os.path.join(In_Out_dir, Outlet+".shp"))
     commands.append("-om");commands.append(os.path.join(In_Out_dir, "outlets_moved.shp"))
@@ -98,8 +104,9 @@ def MOVEOUTLETTOSTREAMS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,Outlet):
 
 def PEUKERDOUGLAS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "PeukerDouglas"));commands.append("-fel")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(TauDEM_dir, "peukerdouglas"));commands.append("-fel")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"fel.tif"));commands.append("-ss")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"ss.tif"))
     fused_command = ''.join(['"%s" ' % c for c in commands])
@@ -108,8 +115,9 @@ def PEUKERDOUGLAS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
 
 def ACCUMULATING_STREAM_SOURCE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "Aread8"));commands.append("-p")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(TauDEM_dir, "aread8"));commands.append("-p")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"p.tif"));commands.append("-o")
     commands.append(os.path.join(In_Out_dir, "outlets_moved.shp"));commands.append("-ad8")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"ssa.tif"));commands.append("-wg")
@@ -119,8 +127,9 @@ def ACCUMULATING_STREAM_SOURCE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
 
 def DROP_ANALYSIS(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,Min_threshold,Max_threshold,Number_threshold):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "Dropanalysis"));commands.append("-p")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(TauDEM_dir, "dropanalysis"));commands.append("-p")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"p.tif"));commands.append("-fel")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"fel.tif"));commands.append("-ad8")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"ad8.tif"));commands.append("-ssa")
@@ -143,8 +152,9 @@ def FIND_OPTIMUM(In_Out_dir,Input_Dem):
 
 def STREAM_SOURCE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,thershold):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "Threshold"));commands.append("-ssa")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(TauDEM_dir, "threshold"));commands.append("-ssa")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"ssa.tif"));commands.append("-src")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"src2.tif"));commands.append("-thresh")
     commands.append(str(thershold))
@@ -155,8 +165,9 @@ def STREAM_SOURCE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,thershold):
 
 def StreamNet(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "Streamnet"));commands.append("-fel")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(TauDEM_dir, "streamnet"));commands.append("-fel")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"fel.tif"));commands.append("-p")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"p.tif"));commands.append("-ad8")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"ad8.tif"));commands.append("-src")
@@ -172,18 +183,20 @@ def StreamNet(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
 
 def WETNESS_INDEX(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "SlopeAreaRatio"));commands.append("-slp")
-    commands.append(os.path.join(In_Out_dir,Input_Dem+"slp.tif"));commands.append("-sca")
-    commands.append(os.path.join(In_Out_dir,Input_Dem+"sca.tif"));commands.append("-sar")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(TauDEM_dir, "slopearearatio"));commands.append("-slp")
+    commands.append(os.path.join(In_Out_dir,Input_Dem+"sd8.tif"));commands.append("-sca")
+    commands.append(os.path.join(In_Out_dir,Input_Dem+"ad8.tif"));commands.append("-sar")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"sar.tif"))
     fused_command = ''.join(['"%s" ' % c for c in commands])
     return fused_command
 
 def DISTANCE_DOWNSTREAM(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(TauDEM_dir, "D8HDistToStrm"));commands.append("-p")
+    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(TauDEM_dir, "d8hdisttostrm"));commands.append("-p")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"p.tif"));commands.append("-src")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"src.tif"));commands.append("-dist")
     commands.append(os.path.join(In_Out_dir,Input_Dem+"dist.tif"));
@@ -194,13 +207,14 @@ def DISTANCE_DOWNSTREAM(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem):
 
 def REACH_LINK(MPI_dir,np,Exe_dir,In_Out_dir,Input_Dem):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
+    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
     commands.append(os.path.join(Exe_dir,"ReachLink"))
     commands.append("-me");commands.append(os.path.join(In_Out_dir,Input_Dem+"w.tif"))
     commands.append("-p");commands.append(os.path.join(In_Out_dir,Input_Dem+"p.tif"))
     commands.append("-tree");commands.append(os.path.join(In_Out_dir,Input_Dem+"tree.txt"))
     commands.append("-coord");commands.append(os.path.join(In_Out_dir,Input_Dem+"coord.txt"))
-    commands.append("-reachlink");commands.append(os.path.join(In_Out_dir, "rchlink.txt"))
+    commands.append("-rchlink");commands.append(os.path.join(In_Out_dir, "rchlink.txt"))
     commands.append("-nodelink");commands.append(os.path.join(In_Out_dir, "nodelinks.txt"))
     commands.append("-nc");commands.append(os.path.join(In_Out_dir, Input_Dem+"nc.tif"))
     commands.append("-dc");commands.append(os.path.join(In_Out_dir, Input_Dem+"dc.tif"))
@@ -208,18 +222,19 @@ def REACH_LINK(MPI_dir,np,Exe_dir,In_Out_dir,Input_Dem):
     commands.append("-rcp");commands.append(os.path.join(In_Out_dir, "rchproperties.txt"))
     fused_command = ''.join(['"%s" ' % c for c in commands])
     #return fused_command
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 def DISTANCE_DISTRIBUTION(MPI_dir,np,Exe_dir,In_Out_dir,Input_Dem):
     commands=[]
-    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-n");commands.append(str(np))
-    commands.append(os.path.join(Exe_dir,"twidistsetup"))
+    commands.append(os.path.join(MPI_dir,"mpiexec"));commands.append("-np");commands.append(str(np));commands.append("--allow-run-as-root")
+
+    commands.append(os.path.join(Exe_dir,"DistWetness"))
     commands.append("-me");commands.append(os.path.join(In_Out_dir,Input_Dem+"w.tif"))
     commands.append("-twi");commands.append(os.path.join(In_Out_dir, Input_Dem+"sar.tif"))
     commands.append("-dis");commands.append(os.path.join(In_Out_dir, Input_Dem+"dist.tif"))
     commands.append("-dists");commands.append(os.path.join(In_Out_dir, "distribution.txt"));
     fused_command = ''.join(['"%s" ' % c for c in commands])
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 # """download soil data """
 
@@ -243,7 +258,7 @@ def download_Soil_Data(Watershed_Raster,Western_Soil_Raster,R_EXE_Path,R_Code_Pa
     commands.append(os.path.join(R_EXE_Path,"Rscript"));commands.append(Soil_script);commands.append(str(wateshed_Dir))
     commands.append(str('Soil_Raster_Watershed.tif'))
     fused_command = ''.join(['"%s" ' % c for c in commands])
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 def daymet_download(Watershed_Raster,Start_year,End_year,R_EXE_Path,R_Code_Path):
     head,tail=os.path.split(str(Watershed_Raster))
@@ -254,7 +269,7 @@ def daymet_download(Watershed_Raster,Start_year,End_year,R_EXE_Path,R_Code_Path)
     commands.append(os.path.join(R_EXE_Path,"Rscript"));commands.append(daymet_download_script);commands.append(str(watershed_dir))
     commands.append(str(wateshed_name));commands.append(str(Start_year));commands.append(str(End_year));
     fused_command = ''.join(['"%s" ' % c for c in commands])
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 def getLULCdata(nlcd_CONUS,Watershed_Raster,R_EXE_Path,R_Code_Path):
     head,tail=os.path.split(str(Watershed_Raster))
@@ -265,7 +280,7 @@ def getLULCdata(nlcd_CONUS,Watershed_Raster,R_EXE_Path,R_Code_Path):
     commands.append(os.path.join(R_EXE_Path,"Rscript"));commands.append(lulc_script);commands.append(str(nlcd_CONUS))
     commands.append(str(watershed_dir));commands.append(str(wateshed_name))
     fused_command = ''.join(['"%s" ' % c for c in commands])
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 
 def Create_Parspcfile(Watershed_Name_Dir,R_EXE_Path,R_Code_Path):
@@ -278,7 +293,7 @@ def Create_Parspcfile(Watershed_Name_Dir,R_EXE_Path,R_Code_Path):
     commands.append(os.path.join(R_EXE_Path,"Rscript"));commands.append(parspc_script)
     commands.append(str(watershed_dir));commands.append(str(wateshed_name))
     fused_command = ''.join(['"%s" ' % c for c in commands])
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 
 
@@ -289,14 +304,14 @@ def BASIN_PARAM(Exe_dir,Input_Dem_Name_Dir):
     Dem_base=os.path.basename(Input_Dem_Name_Dir)
     Dem_name=os.path.splitext(str(Dem_base))[0]
     commands=[]
-    commands.append(os.path.join(Exe_dir,"mepsetup"))
+    commands.append(os.path.join(Exe_dir,"BasinParammeter"))
     commands.append("-me");commands.append(os.path.join(Dem_dir,Dem_name+"w.tif"))
     commands.append("-parspec");commands.append(os.path.join(Dem_dir,Dem_name+"parspc.txt"))
     commands.append("-node");commands.append(os.path.join(Dem_dir,"nodelinks.txt"))
     commands.append("-mpar");commands.append(os.path.join(Dem_dir, "basinpars.txt"));
     fused_command = ''.join(['"%s" ' % c for c in commands])
     os.chdir(Dem_dir)
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 
 def create_latlonfromxy(Watershed_Name_Dir,R_EXE_Path,R_Code_Path):
@@ -308,7 +323,7 @@ def create_latlonfromxy(Watershed_Name_Dir,R_EXE_Path,R_Code_Path):
     commands.append(os.path.join(R_EXE_Path,"Rscript"));commands.append(latlonxy_script)
     commands.append(str(watershed_dir));commands.append(str(wateshed_name))
     fused_command = ''.join(['"%s" ' % c for c in commands])
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 
 def crop_PRISM_Rain(Watershed_Name_Dir,PRISM_Name_Dir,R_EXE_Path,R_Code_Path):
@@ -321,7 +336,7 @@ def crop_PRISM_Rain(Watershed_Name_Dir,PRISM_Name_Dir,R_EXE_Path,R_Code_Path):
     commands.append(str(PRISM_Name_Dir))
     commands.append(str(watershed_dir));commands.append(str(wateshed_name))
     fused_command = ''.join(['"%s" ' % c for c in commands])
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 
 
@@ -339,7 +354,7 @@ def Create_rain_weight(Exe_Dir,Watershed_Name_Dir):
     commands.append("-tri");commands.append(os.path.join(watershed_dir, "triout.tif"))
     commands.append("-wt");commands.append(os.path.join(watershed_dir, "weights.txt"))
     fused_command = ''.join(['"%s" ' % c for c in commands])
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 
 def format_Rain_Weight(Weight_file_dir,R_EXE_Path,R_Code_Path):
@@ -348,7 +363,7 @@ def format_Rain_Weight(Weight_file_dir,R_EXE_Path,R_Code_Path):
     commands.append(os.path.join(R_EXE_Path,"Rscript"));commands.append(format_rainweight_script)
     commands.append(str(Weight_file_dir))
     fused_command = ''.join(['"%s" ' % c for c in commands])
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 
 def create_rain_dat(climate_file_dir,Start_year, End_year,R_EXE_Path,R_Code_Path):
@@ -357,7 +372,7 @@ def create_rain_dat(climate_file_dir,Start_year, End_year,R_EXE_Path,R_Code_Path
     commands.append(os.path.join(R_EXE_Path,"Rscript"));commands.append(raindat_script)
     commands.append(str(climate_file_dir));commands.append(str(Start_year));commands.append(str(End_year))
     fused_command = ''.join(['"%s" ' % c for c in commands])
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 def create_tmaxtmin_dat(climate_file_dir,Start_year, End_year,R_EXE_Path,R_Code_Path):
     tmaxtmin_script= os.path.join(R_Code_Path,'create_tmaxtmintdew.r')
@@ -365,7 +380,7 @@ def create_tmaxtmin_dat(climate_file_dir,Start_year, End_year,R_EXE_Path,R_Code_
     commands.append(os.path.join(R_EXE_Path,"Rscript"));commands.append(tmaxtmin_script)
     commands.append(str(climate_file_dir));commands.append(str(Start_year));commands.append(str(End_year))
     fused_command = ''.join(['"%s" ' % c for c in commands])
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 def create_clipar_dat(climate_file_dir,Watershed_Raster_Name,Start_year, End_year,R_EXE_Path,R_Code_Path):
     clipar_script= os.path.join(R_Code_Path,'create_clipar.R')
@@ -374,7 +389,7 @@ def create_clipar_dat(climate_file_dir,Watershed_Raster_Name,Start_year, End_yea
     commands.append(str(climate_file_dir));commands.append(str(Start_year));commands.append(str(End_year))
     commands.append(str(Watershed_Raster_Name))
     fused_command = ''.join(['"%s" ' % c for c in commands])
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 
 def download_streamflow(USGS_gage,Start_Year, End_Year,Output_Dir,R_EXE_Path,R_Code_Path):
@@ -386,7 +401,7 @@ def download_streamflow(USGS_gage,Start_Year, End_Year,Output_Dir,R_EXE_Path,R_C
     commands.append(str(USGS_gage));commands.append(str(start));commands.append(str(end))
     commands.append(str(Output_Dir))
     fused_command = ''.join(['"%s" ' % c for c in commands])
-    subprocess.call(fused_command)
+    os.system(fused_command)
 
 def Raster_to_Polygon(input_file,output_file):
    gdal.UseExceptions()
