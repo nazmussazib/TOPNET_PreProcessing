@@ -12,12 +12,14 @@ setwd(args[4])
 siteNumber=args[1]
 dates=seq(as.Date(args[2]), as.Date(args[3]), "day")
 print("start Downloading")
-streamflow_Daily = getDVData(siteNumber,"00060",args[2],args[3]) 
-streamflow=data.frame(Q=streamflow_Daily$Q)
-print("Finish Downloading")
-##there are some missing data 
+streamflow_Daily = readNWISdv(siteNumber,"00060",args[2],args[3]) 
+streamflow=data.frame(streamflow_Daily )
+daily_streamflow=streamflow[,5]*0.0283168466 # convert to cfs to m3/s
 match_index=match(dates,streamflow_Daily$Date)
-match_flow=data.frame(streamflow$Q[match_index])
+match_flow=data.frame(daily_streamflow[match_index])
+
+print("Finish Downloading")
+##there are some missing data match_index=match(dates,streamflow_Daily$Date)
 match_flow[] <- lapply(match_flow, function(.col){ if (is.numeric(.col)) return(sprintf("%8.2f",.col))else return(.col)}) 
 streamflow=data.matrix(match_flow)
 streamflow[is.na(streamflow)] <- -999
