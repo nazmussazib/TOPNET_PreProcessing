@@ -43,7 +43,7 @@ email:  dtarb@usu.edu
 #include <memory>
 // #include "tiffIO.h"  Part of commonLib.h
 #include <ogr_spatialref.h>
-#include <math.h>;
+#include<math.h>;
 #include "commonLib.h"
 #include <iostream>
 using namespace std;
