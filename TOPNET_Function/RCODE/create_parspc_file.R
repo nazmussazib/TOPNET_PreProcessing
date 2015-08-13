@@ -4,7 +4,7 @@ dir=args[1]
 setwd(dir)
 watershed_name=args[2]
 pit_file=paste(watershed_name,"fel.tif",sep="")
-file_name=paste(watershed_name,"parspc.txt",sep="")
+file_name=args[3]
 sink(file_name)
 cat("f", ",",0,",", "f.tif",sep="","\n")
 cat("ko",",", 0, ",","ko.tif",sep="","\n")

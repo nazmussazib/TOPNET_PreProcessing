@@ -66,17 +66,17 @@ temper[] <- lapply(temper, function(.col){ if (is.numeric(.col)) return(sprintf(
 temper=data.frame(temper,dss[,1],hr)
 
 ##writing tmaxtmintdew.dat file
-
-sink('tmaxtmintdew.dat')
-cat(sprintf("This file provides daily values of Tmax/Tmin/Tdew for each temperature station"),file='tmaxtmintdew.dat',append=TRUE)
-cat("\n", file="tmaxtmintdew.dat", append=TRUE)
-cat(sprintf("Temperature is provided in degrees Celcius"),file='tmaxtmintdew.dat',append=TRUE)
-cat("\n", file="tmaxtmintdew.dat", append=TRUE)
+filename=args[4]
+sink(filename)
+cat(sprintf("This file provides daily values of Tmax/Tmin/Tdew for each temperature station"),file=filename,append=TRUE)
+cat("\n", file=filename, append=TRUE)
+cat(sprintf("Temperature is provided in degrees Celcius"),file=filename,append=TRUE)
+cat("\n", file=filename, append=TRUE)
 sites=seq(1,(nc),1)
-cat(sprintf("%s %d ", "ver2",nc),file='tmaxtmintdew.dat',append=TRUE) 
-cat(sprintf( "%d", sites),(sprintf( "%s", "Date Hour","\n")),file='tmaxtmintdew.dat',append=TRUE) 
-cat("\n", file="tmaxtmintdew.dat", append=TRUE)
-write.table(temper, file = "tmaxtmintdew.dat",row.names=FALSE,col.names=FALSE,quote=FALSE,append=TRUE)
+cat(sprintf("%s %d ", "ver2",nc),file=filename,append=TRUE)
+cat(sprintf( "%d", sites),(sprintf( "%s", "Date Hour","\n")),file=filename,append=TRUE)
+cat("\n", file=filename, append=TRUE)
+write.table(temper, file = filename,row.names=FALSE,col.names=FALSE,quote=FALSE,append=TRUE)
 sink()
 
 print ("Tmaxtmimn tdew created ")

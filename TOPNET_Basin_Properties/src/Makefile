@@ -61,7 +61,8 @@ DEBUG = -g
 CFLAGS  += -std=c++0x $(DEBUG)
 
 LARGEFILEFLAG= -D_FILE_OFFSET_BITS=64
-LDLIBS = -L"/home/A01769693/gdal/lib" -lgdal
+INCDIRS=-I/usr/lib/openmpi/include -I/usr/include/gdal
+LIBDIRS=-lgdal
 
 
 

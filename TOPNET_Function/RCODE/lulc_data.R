@@ -14,4 +14,4 @@ lulcwatershed=crop(uslulc,r,"lulcwatershed1.tif",overwrite=TRUE)
 sum_lulc_watrshed1= overlay(lulcwatershed, r, fun=function(x,y){return(x+y)}) # sumof watershed and croped lulc
 sum_lulc_watershed2=overlay(sum_lulc_watrshed1,r, fun=function(x,y){return(x-y)}) # subtract (sum of watershed and croped rainfall) to watershed for getting annural rainfall for watrshed
 my=setExtent(sum_lulc_watershed2, r, keepres=FALSE, snap=FALSE)
-lulc_intersted_area=writeRaster(my,"lulcmmef.tif",overwrite=TRUE,datatype='INT4S',options="COMPRESS=NONE") ## change datatype which will change 64 bit to 32 bit
+lulc_intersted_area=writeRaster(my,"LULC_Watershed.tif",overwrite=TRUE,datatype='INT4S',options="COMPRESS=NONE") ## change datatype which will change 64 bit to 32 bit

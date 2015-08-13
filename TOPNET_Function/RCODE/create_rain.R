@@ -46,15 +46,15 @@ precip[] <- lapply(precip, function(.col){ if (is.numeric(.col)) return(sprintf(
 precip=data.frame(precip,dss[,1],hr)
 
 ##writing rain.dat file
-
-sink("rain.dat") 
-cat(sprintf("This file provides daily precipitation rate for each rain station"),file='rain.dat',append=TRUE)
-cat("\n", file="rain.dat", append=TRUE)
-cat(sprintf("Precipitation is provided in mm/day"),file='rain.dat',append=TRUE)
-cat("\n", file="rain.dat", append=TRUE)
+filename=args[4]
+sink(filename)
+cat(sprintf("This file provides daily precipitation rate for each rain station"),file=filename,append=TRUE)
+cat("\n", file=filename, append=TRUE)
+cat(sprintf("Precipitation is provided in mm/day"),file=filename,append=TRUE)
+cat("\n", file=filename, append=TRUE)
 sites=seq(1,(nc),1)
-cat(sprintf("%s %d ", "ver2",nc),file='rain.dat',append=TRUE) 
-cat(sprintf( "%d", sites),(sprintf( "%s", "Date Hour","\n")),file='rain.dat',append=TRUE) 
-cat("\n", file="rain.dat", append=TRUE)
-write.table(precip, file = "rain.dat",row.names=FALSE,col.names=FALSE,quote=FALSE,append=TRUE)
+cat(sprintf("%s %d ", "ver2",nc),file=filename,append=TRUE)
+cat(sprintf( "%d", sites),(sprintf( "%s", "Date Hour","\n")),file=filename,append=TRUE)
+cat("\n", file=filename, append=TRUE)
+write.table(precip, file = filename,row.names=FALSE,col.names=FALSE,quote=FALSE,append=TRUE)
 sink()

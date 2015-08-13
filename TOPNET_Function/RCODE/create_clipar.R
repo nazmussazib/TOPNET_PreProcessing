@@ -83,22 +83,23 @@ station_monthly[,4]=lapse_mat[,1]
 station_monthly[] <- lapply(station_monthly, function(.col){ if (is.numeric(.col)) return(sprintf("%8.2f",.col))else return(.col)}) 
 
 #writng clipar.dat
-sink("clipar.dat") 
-cat(sprintf("This file provides meta-data for each temperature station"),file='clipar.dat',append=TRUE)
-cat("\n", file="clipar.dat", append=TRUE)
-cat(sprintf("Temperature ranges are in Degrees Celcius"),file='clipar.dat',append=TRUE)
-cat("\n", file="clipar.dat", append=TRUE)
+filname=args[5]
+sink(filname)
+cat(sprintf("This file provides meta-data for each temperature station"),file=filname,append=TRUE)
+cat("\n", file=filname, append=TRUE)
+cat(sprintf("Temperature ranges are in Degrees Celcius"),file=filname,append=TRUE)
+cat("\n", file=filname, append=TRUE)
 sites=seq(1,(nc),1)
-cat(sprintf("%d %s ", nc,"! Number of temperature stations"),file='clipar.dat',append=TRUE) 
-cat("\n", file="clipar.dat", append=TRUE)
+cat(sprintf("%d %s ", nc,"! Number of temperature stations"),file=filname,append=TRUE)
+cat("\n", file=filname, append=TRUE)
 ##please change standard longitude according to watershed location
 
 std_longitude=-120.00;
-cat(sprintf("%3.2f %s ",std_longitude,"!Standard Longitude of time zone used in local time calculations"),file='clipar.dat',append=TRUE) 
-cat("\n", file="clipar.dat", append=TRUE)
+cat(sprintf("%3.2f %s ",std_longitude,"!Standard Longitude of time zone used in local time calculations"),file=filname,append=TRUE)
+cat("\n", file=filname, append=TRUE)
 cat(sprintf("'Station_id  Lat    Lon     Elev_m   Jan    Feb    Mar     Apr       May    Jun    Jul      Aug     Sep    Oct      Nov    Dec"),file='clipar.dat',append=TRUE)
-cat("\n", file="clipar.dat", append=TRUE)
-write.table(station_monthly, file = "clipar.dat",row.names=FALSE,col.names=FALSE,quote=FALSE,append=TRUE)
+cat("\n", file=filname, append=TRUE)
+write.table(station_monthly, file = filname,row.names=FALSE,col.names=FALSE,quote=FALSE,append=TRUE)
 sink()
 
 print("Clipar.dat file created")

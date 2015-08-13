@@ -512,7 +512,6 @@ datatype linearpart<datatype>::getData(long inx, long iny, datatype &val) {
 }
 
 
-
 template <class datatype>
 void linearpart<datatype>::savedxdyc( tiffIO &obj) {
     dxc=new double[ny];

@@ -327,6 +327,7 @@ funcs = {
                 },
 
           # sample TOPNET service testing
+
           'downloadstreamflow':
                 {
                    'function_to_execute': CommonLib.download_streamflow,
@@ -351,12 +352,12 @@ funcs = {
                 },
 
 
-           'downloadsoildata':
+          'downloadsoildata':
 
                  {
                    'function_to_execute': CommonLib.download_Soil_Data,
                    'file_inputs': [],
-                   'file_outputs': [{'output_f_file': 'f.tif','output_dth1_file': 'dth1.tif','output_dth2_file':'dth2.tif'}],
+                   'file_outputs': [{'output_f_file':'f.tif','output_k_file':'ko.tif','output_dth1_file': 'dth1.tif','output_dth2_file':'dth2.tif','output_psif_file':'psif.tif','output_sd_file': 'sd.tif','output_Tran_file':'Trans.tif'}],
                    'user_inputs': [ ],
                    'user_file_inputs': ['Soil_Raster'],
                    'validator': DownloadSoildataRequestValidator
@@ -364,18 +365,17 @@ funcs = {
 
 
 
-          'topnetwatersheddelineation':
+
+          'watersheddelineation':
 
                  {
                    'function_to_execute': CommonLib.watershed_delineation,
                    'file_inputs': [],
-                   'file_outputs': [{'output_outletshapefile':'outlets_moved.shp','output_wastershedfile': 'Delineated_Watershed.tif','output_distancefile': 'Watershed_dist.tif','output_wetnessindexfile':'Watershed_sar.tif'}],
+                   'file_outputs': [{'output_pointoutletshapefile':'moved_outlets.shp','output_watershedfile': 'Delineated_Watershed.tif','output_treefile':'Stream_tree.txt','output_coordfile': 'Stream_coord.txt','output_slopareafile':'SlopeAreaRatio.tif','output_distancefile':'DistanceStream.tif'}],
                    'user_inputs': ['Src_threshold','Min_threshold','Max_threshold','Number_threshold'],
                    'user_file_inputs': ['DEM_Raster','Outlet_shapefile'],
                    'validator': WatershedDelineationdataRequestValidator
                 },
-
-
 
 
 
@@ -386,9 +386,80 @@ funcs = {
                    'file_inputs': [],
                    'file_outputs': [{'output_reachfile':'rchlink.txt','output_nodefile': 'nodelinks.txt','output_rchpropertiesfile': 'rchproperties.txt'}],
                    'user_inputs': [],
-                   'user_file_inputs': ['Watershed_Raster','D8flow_Raster','treefile','coordfile'],
+                   'user_file_inputs': ['DEM_Raster','Watershed_Raster','treefile','coordfile'],
                    'validator': ReachLinkdataRequestValidator
                 },
+
+
+
+          'dist_wetness_distribution':
+
+                 {
+                   'function_to_execute': CommonLib.DISTANCE_DISTRIBUTION,
+                   'file_inputs': [],
+                   'file_outputs': [{'output_distributionfile':'distribution.txt' }],
+                   'user_inputs': [],
+                   'user_file_inputs': ['Watershed_Raster','SaR_Raster','Dist_Raster'],
+                   'validator': dist_wetness_distributiondataRequestValidator
+                },
+
+
+
+          'getlanduselandcoverdata':
+
+                 {
+                   'function_to_execute': CommonLib.getLULCdata,
+                   'file_inputs': [],
+                   'file_outputs': [{'output_LULCRaster':'LULC_Watershed.tif' }],
+                   'user_inputs': [],
+                   'user_file_inputs': ['Watershed_Raster'],
+                   'validator': getlanduselandcoverdataRequestValidator
+                },
+
+          'createlatlonfromxy':
+
+                 {
+                   'function_to_execute': CommonLib.create_latlonfromxy,
+                   'file_inputs': [],
+                   'file_outputs': [{'output_latlonfromxyfile':'latlongfromxy.txt' }],
+                   'user_inputs': [],
+                   'user_file_inputs': ['Watershed_Raster'],
+                   'validator': createlatlonfromxydataRequestValidator
+                },
+          'createparmfile':
+
+                 {
+                   'function_to_execute': CommonLib.Create_Parspcfile,
+                   'file_inputs': [],
+                   'file_outputs': [{'output_parspcfile':'parspc.txt' }],
+                   'user_inputs': [],
+                   'user_file_inputs': ['Watershed_Raster'],
+                   'validator': createparmfiledataRequestValidator
+                },
+
+          'createrainweight':
+
+                 {
+                   'function_to_execute': CommonLib.Create_rain_weight,
+                   'file_inputs': [],
+                   'file_outputs': [{'output_rainweightfile':'rainweights.txt' }],
+                   'user_inputs': [],
+                   'user_file_inputs': ['Watershed_Raster','Rain_gauge_shapefile'],
+                   'validator': createrainweightdataRequestValidator
+                },
+
+
+          'createbasinparameter':
+
+                 {
+                   'function_to_execute': CommonLib.BASIN_PARAM,
+                   'file_inputs': [],
+                   'file_outputs': [{'output_basinfile':'basinpars.txt' }],
+                   'user_inputs': [],
+                   'user_file_inputs': ['DEM_Raster','f_raster','k_raster','dth1_raster','dth2_raster','sd_raster','tran_raster','lulc_raster','lutlc','lutkc', 'Watershed_Raster','parameter_specficationfile','nodelinksfile'],
+                   'validator': createbasinparameterdataRequestValidator
+                },
+
 
 
 

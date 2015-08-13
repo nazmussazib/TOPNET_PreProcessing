@@ -317,9 +317,9 @@ class DownloadClimatedataRequestValidator(serializers.Serializer):
     Watershed_Raster = serializers.URLField(required=True)
     Start_Year = serializers.IntegerField(required=True)
     End_Year = serializers.IntegerField(required=True)
-    output_rainfile = serializers.CharField(required=False)
-    output_temperaturefile = serializers.CharField(required=False)
-    output_cliparfile = serializers.CharField(required=False)
+    output_rainfile = serializers.CharField(required=True)
+    output_temperaturefile = serializers.CharField(required=True)
+    output_cliparfile = serializers.CharField(required=True)
 
 class DownloadSoildataRequestValidator(serializers.Serializer):
     Soil_Raster = serializers.URLField(required=True)
@@ -327,6 +327,12 @@ class DownloadSoildataRequestValidator(serializers.Serializer):
     output_f_file = serializers.CharField(required=False)
     output_dth1_file = serializers.CharField(required=False)
     output_dth2_file = serializers.CharField(required=False)
+    output_k_file = serializers.CharField(required=False)
+    output_psif_file = serializers.CharField(required=False)
+    output_sd_file = serializers.CharField(required=False)
+    output_Tran_file = serializers.CharField(required=False)
+
+
 
 class WatershedDelineationdataRequestValidator(serializers.Serializer):
     DEM_Raster = serializers.URLField(required=True)
@@ -335,12 +341,16 @@ class WatershedDelineationdataRequestValidator(serializers.Serializer):
     Min_threshold = serializers.IntegerField(required=True)
     Max_threshold = serializers.IntegerField(required=True)
     Number_threshold= serializers.IntegerField(required=True)
-    output_outletshapefile= serializers.CharField(required=False)
-    output_wastershedfile= serializers.CharField(required=False)
-    output_distancefile = serializers.CharField(required=False)
-    output_wetnessindexfile = serializers.CharField(required=False)
 
-    def validate_outlet_shapefile(self, value):
+    output_pointoutletshapefile= serializers.CharField(required=True)
+    output_watershedfile= serializers.CharField(required=True)
+    output_treefile=serializers.CharField(required=True)
+    output_coordfile=serializers.CharField(required=True)
+
+    output_slopareafile=serializers.CharField(required=True)
+    output_distancefile=serializers.CharField(required=True)
+
+    def validate_Outlet_shapefile(self, value):
         try:
             validate_url_file_path(value)
         except NotFound:
@@ -351,14 +361,61 @@ class WatershedDelineationdataRequestValidator(serializers.Serializer):
 
         return value
 
+    def validate_output_pointoutletshapefile(self, value):
+        if not value.endswith('.shp'):
+            raise serializers.ValidationError("Invalid output outlet shapefile. Shapefile needs to be a .shp file:%s" % value)
+
+        return value
+
+
+
 
 class ReachLinkdataRequestValidator(serializers.Serializer):
     Watershed_Raster = serializers.URLField(required=True)
-    D8flow_Raster = serializers.URLField(required=True)
+    DEM_Raster = serializers.URLField(required=True)
     treefile = serializers.URLField(required=True)
     coordfile = serializers.URLField(required=True)
 
+    output_reachfile= serializers.CharField(required=True)
+    output_nodefile = serializers.CharField(required=True)
+    output_rchpropertiesfile = serializers.CharField(required=True)
 
-    output_reachfile= serializers.CharField(required=False)
-    output_nodefile = serializers.CharField(required=False)
-    output_rchpropertiesfile = serializers.CharField(required=False)
+class dist_wetness_distributiondataRequestValidator(serializers.Serializer):
+    Watershed_Raster = serializers.URLField(required=True)
+    SaR_Raster = serializers.URLField(required=True)
+    Dist_Raster= serializers.URLField(required=True)
+    output_distributionfile= serializers.CharField(required=True)
+
+class getlanduselandcoverdataRequestValidator(serializers.Serializer):
+    Watershed_Raster = serializers.URLField(required=True)
+    output_LULCRaster = serializers.URLField(required=True)
+
+class createrainweightdataRequestValidator(serializers.Serializer):
+    Watershed_Raster = serializers.URLField(required=True)
+    Rain_gauge_shapefile = serializers.URLField(required=True)
+    output_rainweightfile = serializers.URLField(required=True)
+class createbasinparameterdataRequestValidator(serializers.Serializer):
+    Watershed_Raster = serializers.URLField(required=True)
+    DEM_Raster = serializers.URLField(required=True)
+    f_raster = serializers.URLField(required=True)
+    k_raster = serializers.URLField(required=True)
+    dth1_raster = serializers.URLField(required=True)
+    dth2_raster = serializers.URLField(required=True)
+    sd_raster = serializers.URLField(required=True)
+    tran_raster = serializers.URLField(required=True)
+    lulc_raster = serializers.URLField(required=True)
+    lutlc = serializers.URLField(required=True)
+    lutkc = serializers.URLField(required=True)
+    parameter_specficationfile = serializers.URLField(required=True)
+
+    nodelinksfile=serializers.URLField(required=True)
+    output_basinfile = serializers.URLField(required=True)
+
+class createlatlonfromxydataRequestValidator(serializers.Serializer):
+    Watershed_Raster = serializers.URLField(required=True)
+    output_latlonfromxyfile = serializers.URLField(required=True)
+class createparmfiledataRequestValidator(serializers.Serializer):
+    Watershed_Raster = serializers.URLField(required=True)
+    output_parspcfile = serializers.CharField(required=True)
+
+
