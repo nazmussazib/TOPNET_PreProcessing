@@ -24,7 +24,7 @@ print("nospsruvey")
 
 df2=data.frame(X=top[,1],Y=top[,2],ID=as.integer(seq(1,length(top[,1]),1)))
 lots <- SpatialPointsDataFrame( coords = cbind(df2$X,df2$Y), data = df2) 
-writeOGR( lots, dsn = 'Rain_Gauge', layer="Rain_Gauge",driver='ESRI Shapefile',overwrite=TRUE) 
+writeOGR( lots, dsn = ".", layer=args[5],driver='ESRI Shapefile',overwrite=TRUE)
 
 
 len=(nrow(lat_lon_rg1))

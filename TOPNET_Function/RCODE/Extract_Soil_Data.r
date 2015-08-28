@@ -200,13 +200,13 @@ rat.new <- rat.new[,c("ID", "COUNT","fvalue","ksat","dth1","dth2","psif","depth"
 
 levels(r)=rat.new
 
-q=c("f","ko","dth1","dth2","psif","sd","Trans")
+q=c(args[3],args[4],args[5],args[6],args[7],args[8],args[9])
 
 #setwd(args[3])
 for(i in 1:length(q)){
   r.new=deratify(r,att=names( rat.new)[i+2]) 
   r.new[is.na(r.new[])] <- cellStats(r.new,mean) ## fill missing data with mean value
-  writeRaster(r.new,(paste(q[i],".tif",sep="")),overwrite=TRUE,datatype='FLT4S',format="GTiff",options="COMPRESS=NONE")
+  writeRaster(r.new,q[i],overwrite=TRUE,datatype='FLT4S',format="GTiff",options="COMPRESS=NONE")
 }
 
 

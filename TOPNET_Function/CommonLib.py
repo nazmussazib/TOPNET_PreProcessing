@@ -1,4 +1,23 @@
-
+import shapefile
+import numpy
+from numpy import zeros
+from numpy import logical_and
+import pandas as pd
+import  os
+import time
+from osgeo import ogr,osr,gdal
+import rasterio.features
+from numpy import *
+import numpy as np
+from affine import Affine
+from shapely.geometry import shape, mapping
+from shapely.ops import unary_union
+import fiona
+import itertools
+from osgeo import gdal
+import sys
+from rasterstats import zonal_stats
+start_time = time.time()
 import os
 import subprocess
 import gdal,ogr
@@ -10,6 +29,8 @@ import sys
 import os
 from osgeo import ogr
 from osgeo import osr
+import numpy as np
+from osgeo import gdal
 from usu_data_service.servicefunctions.utils import *
 from usu_data_service.servicefunctions.watershedFunctions import *
 R_Code_Path = '/home/ahmet/ciwater/usu_data_service/topnet_data_service/TOPNET_Function/RCODE'
@@ -19,7 +40,7 @@ TauDEM_dir='/home/ahmet/ciwater/usu_data_service/topnet_data_service/TauDEM'
 Exe_dir='/home/ahmet/ciwater/usu_data_service/topnet_data_service/TOPNET_Basin_Properties'
 Base_Data_dir='/home/ahmet/ciwater/usu_data_service/topnet_data_service/Base_Data/'
 
-def watershed_delineation(DEM_Raster,Outlet_shapefile,Src_threshold,Min_threshold,Max_threshold,Number_threshold, output_pointoutletshapefile,output_watershedfile,output_treefile,output_coordfile,output_slopareafile,output_distancefile):
+def watershed_delineation(DEM_Raster,Outlet_shapefile,Src_threshold,Min_threshold,Max_threshold,Number_threshold, output_pointoutletshapefile,output_watershedfile,output_treefile,output_coordfile,output_streamnetfile,output_slopareafile,output_distancefile):
 
     head,tail=os.path.split(str(DEM_Raster))
 
@@ -126,7 +147,7 @@ def watershed_delineation(DEM_Raster,Outlet_shapefile,Src_threshold,Min_threshol
     if retDictionary['success'] == "False":
         return retDictionary
 
-    retDictionary=call_subprocess(StreamNet(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,output_pointoutletshapefile,output_watershedfile,output_treefile, output_coordfile),'delineatewatershed')
+    retDictionary=call_subprocess(StreamNet(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,output_pointoutletshapefile,output_watershedfile,output_treefile, output_coordfile,output_streamnetfile),'delineatewatershed')
     if retDictionary['success'] == "False":
         return retDictionary
 
@@ -272,7 +293,7 @@ def STREAM_SOURCE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,thershold):
 
 
 
-def StreamNet(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,output_pointoutletshapefile,output_watershedfile,output_treefile,output_coordfile):
+def StreamNet(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,output_pointoutletshapefile,output_watershedfile,output_treefile,output_coordfile,output_streamnetfile):
     commands=[]
     #commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(np))
 
@@ -284,7 +305,7 @@ def StreamNet(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,output_pointoutletshape
     commands.append(os.path.join(In_Out_dir,Input_Dem+"ord2.tif"));commands.append("-tree")
     commands.append(os.path.join(In_Out_dir,output_treefile));commands.append("-coord")
     commands.append(os.path.join(In_Out_dir,output_coordfile));commands.append("-net")
-    commands.append(os.path.join(In_Out_dir,"Stream_network.shp"));commands.append("-w")
+    commands.append(os.path.join(In_Out_dir,output_streamnetfile));commands.append("-w")
     commands.append(os.path.join(In_Out_dir,output_watershedfile));commands.append("-o")
     commands.append(os.path.join(In_Out_dir,output_pointoutletshapefile))
     fused_command = ''.join(['"%s" ' % c for c in commands])
@@ -363,7 +384,7 @@ def DISTANCE_DISTRIBUTION(Watershed_Raster,SaR_Raster,Dist_Raster,output_distrib
 
 # """download soil data """
 
-def download_Soil_Data(Soil_Raster,output_f_file,output_k_file,output_dth1_file,output_dth2_file,output_psif_file,output_sd_file,output_Tran_file):
+def download_Soil_Data(Soil_Raster,output_f_file,output_k_file,output_dth1_file,output_dth2_file,output_psif_file,output_sd_file,output_tran_file):
     head,tail=os.path.split(str(Soil_Raster))
     wateshed_Dir=str(head)
     watershed_raster_name=str(tail)
@@ -372,12 +393,16 @@ def download_Soil_Data(Soil_Raster,output_f_file,output_k_file,output_dth1_file,
 
     commands=[]
     commands.append("Rscript");commands.append(Soil_script);commands.append(str(wateshed_Dir))
-    commands.append(str(watershed_raster_name))
+    commands.append(str(watershed_raster_name));commands.append(str(output_f_file))
+    commands.append(str(output_k_file));commands.append(str(output_dth1_file))
+    commands.append(str(output_dth2_file));commands.append(str(output_psif_file))
+    commands.append(str(output_sd_file));commands.append(str(output_tran_file))
+
     fused_command = ''.join(['"%s" ' % c for c in commands])
     os.system(fused_command)
     return {'success': 'True', 'message': 'download daymetdata successful'}
 
-def daymet_download(Watershed_Raster,Start_Year,End_Year,output_rainfile,output_temperaturefile,output_cliparfile):
+def daymet_download(Watershed_Raster,Start_Year,End_Year,output_rainfile,output_temperaturefile,output_cliparfile,output_gagefile):
     head,tail=os.path.split(str(Watershed_Raster))
     watershed_dir=str(head)
     wateshed_name=str(tail)
@@ -385,6 +410,7 @@ def daymet_download(Watershed_Raster,Start_Year,End_Year,output_rainfile,output_
     commands=[]
     commands.append("Rscript");commands.append(daymet_download_script);commands.append(str(watershed_dir))
     commands.append(str(wateshed_name));commands.append(str(Start_Year));commands.append(str(End_Year))
+    commands.append(str(output_gagefile))
     fused_command1 = ''.join(['"%s" ' % c for c in commands])
     os.system(fused_command1)
     raindat_script= os.path.join(R_Code_Path,'create_rain.R')
@@ -448,37 +474,6 @@ def create_latlonfromxy(Watershed_Raster,output_lalonfromxyfile):
     return {'success': 'True', 'message': 'download LULC data  successful'}
 
 
-def BASIN_PARAM(DEM_Raster,Watershed_Raster,f_raster,k_raster,dth1_raster,dth2_raster,sd_raster,tran_taster,lulc_raster,
-                lutlc,lutkc,parameter_specficationfile,nodelinksfile,output_basinfile):
-
-    head,tail=os.path.split(str(DEM_Raster))
-    In_Out_dir=str(head)
-    base_name=os.path.basename(DEM_Raster)
-    Input_Dem=os.path.splitext(base_name)[0]
-    retDictionary=call_subprocess(PITREMOVE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem),'pitremove')
-    if retDictionary['success'] == "False":
-        return retDictionary
-    head,tail=os.path.split(str(Watershed_Raster))
-    #head_ps,tail_ps=os.path.split(str(parameterfile))
-    Dem_dir=str(head)
-
-    #Dem_base=os.path.basename(Watershed_Raster)
-    #Dem_name=os.path.splitext(str(Dem_base))[0]
-    commands=[]
-    commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(1))
-    commands.append(os.path.join(Exe_dir,"BasinParammeter"))
-    commands.append("-me");commands.append(Watershed_Raster)
-    commands.append("-parspec");commands.append(os.path.join(Dem_dir,parameter_specficationfile))
-    commands.append("-node");commands.append(os.path.join(Dem_dir,nodelinksfile))
-    commands.append("-mpar");commands.append(os.path.join(Dem_dir,output_basinfile))
-    fused_command = ''.join(['"%s" ' % c for c in commands])
-    #os.chdir(Dem_dir)
-    os.system(fused_command)
-
-    return {'success': 'True', 'message': 'download LULC data  successful'}
-
-
-
 def Create_rain_weight(Watershed_Raster,Rain_gauge_shapefile,output_rainweightfile):
     head,tail=os.path.split(str(Watershed_Raster))
     watershed_dir=str(head)
@@ -529,7 +524,7 @@ def download_streamflow(USGS_gage, Start_Year, End_Year, output_streamflow):
     os.system(fused_command)
     return {'success': 'True', 'message': 'download streamflow successful'}
 
-def Raster_to_Polygon(input_file,output_file):
+def Raster_to_Polygon2(input_file,output_file):
     gdal.UseExceptions()
     src_ds = gdal.Open(input_file)
     if src_ds is None:
@@ -564,6 +559,342 @@ def findGDALCoordinates(path):
     miny = maxy + geoTransform[5]*data.RasterYSize
     return [minx,miny,maxx,maxy]
 
+
+def Raster_to_Polygon(input_file):
+
+   gdal.UseExceptions()
+   src_ds = gdal.Open(input_file,GA_ReadOnly)
+   print(input_file)
+   #target = osr.SpatialReference()
+   wkt =src_ds.GetProjection()
+   print(wkt)
+   src =osr.SpatialReference()
+   print(src)
+   ds=src.ImportFromWkt(wkt)
+   #srcband = src_ds.GetRasterBand(1)
+   myarray =(src_ds.GetRasterBand(1).ReadAsArray())
+   #print(myarray)
+   T0 = Affine.from_gdal(*src_ds.GetGeoTransform())
+   tx=[T0[0], T0[1], T0[2], T0[3],T0[4], T0[5]]
+   epsg_code=[]
+   #if (src.IsProjected()):
+      #  ds=epsg_code.append(int(src.GetAuthorityCode("PROJCS")))
+       # print(ds)
+ 
+  # else:
+     #  epsg_code.append(int(src.GetAuthorityCode("GEOGCS")))
+   target = osr.SpatialReference()
+   target.ImportFromEPSG(102003)
+   if src_ds is None:
+     #print 'Unable to open %s' % src_filename
+     sys.exit(1)
+   try:
+      srcband = src_ds.GetRasterBand(1)
+      srd=srcband.GetMaskBand()
+
+   except RuntimeError as e:
+        # for example, try GetRasterBand(10)
+        #print 'Band ( %i ) not found' % band_num
+        #print e
+        sys.exit(1)
+
+  
+
+   drv = ogr.GetDriverByName("ESRI Shapefile")
+   if os.path.exists('temp.shp'):
+     drv.DeleteDataSource('temp.shp')
+
+   dst_layername ='temp'
+   dst_ds = drv.CreateDataSource('temp'+ ".shp" )
+
+   dst_layer = dst_ds.CreateLayer(dst_layername, srs=target)
+   gdal.Polygonize( srcband,srd, dst_layer, -1, [], callback=None)
+   src_ds=None
+
+
+ 
+     
+    
+   
+
+           
+
+
+    
+
+
+
+   
+def dissolve_polygon(input_raster,output_file,dir):
+    #os.chdir(dir)
+    ds = gdal.Open(input_raster)
+    print(ds)
+    print(input_raster)
+    if os.path.exists(output_file):
+      drv.DeleteDataSource(output_file)
+    grid_code=[]
+   
+    band =  ds.GetRasterBand(1)
+
+    myarray =(ds.GetRasterBand(1).ReadAsArray())
+    #print(myarray)
+    T0 = Affine.from_gdal(*ds.GetGeoTransform())
+    tx=[T0[0], T0[1], T0[2], T0[3],T0[4], T0[5]]
+    drv = ogr.GetDriverByName("ESRI Shapefile")
+
+    for shp, val in rasterio.features.shapes(myarray,transform=tx):
+    # print('%s: %s' % (val, shape(shp)))
+     if(val>=0):
+       grid_code.append(float(val))
+    #add_filed_existing_shapefile('temp1.shp',np.asarray(grid_code))
+    pj=[]
+    with fiona.open('temp.shp') as input:
+     meta = input.meta
+    with fiona.open('temp.shp', 'r') as source:
+
+    # Copy the source schema and add two new properties.
+      sink_schema = source.schema.copy()
+      sink_schema['properties']['ID'] = 'float'
+   
+
+    # Create a sink for processed features with the same format and
+    # coordinate reference system as the source.
+      with fiona.open(
+            'temp2.shp', 'w',
+            crs=source.crs,
+            driver=source.driver,
+            schema=sink_schema,
+            ) as sink:
+        i=0
+        for f in source:
+                #print(f)
+           
+                
+                # Add the signed area of the polygon and a timestamp
+                # to the feature properties map.
+                f['properties'].update(
+                    ID=grid_code[i],
+                   )
+                i+=1
+                sink.write(f)
+
+
+
+      pj=[]
+      with fiona.open('temp2.shp') as input:
+       meta = input.meta
+       print('srt')
+       with fiona.open('final.shp', 'w',**meta) as output:
+        # groupby clusters consecutive elements of an iterable which have the same key so you must first sort the features by the 'STATEFP' field
+         e = sorted(input, key=lambda k: k['properties']['ID'])
+         print(e)
+         # group by the 'STATEFP' field
+         for key, group in itertools.groupby(e, key=lambda x:x['properties']['ID']):
+            properties, geom = zip(*[(feature['properties'],shape(feature['geometry'])) for feature in group])
+            # write the feature, computing the unary_union of the elements in the group with the properties of the first element in the group
+            output.write({'geometry': mapping(unary_union(geom)), 'properties': properties[0]})
+def create_basin_param(watershed_shapefile,lancover_raster,lutluc,lutkc,paramfile,nodelinkfile,output_basinfile):
+
+  input_datalist=pd.read_csv(paramfile,header=None)
+  data_length=len(input_datalist.index)
+  print(data_length)
+  #print input_datalist[0][1]
+  lulc_table=pd.read_csv(lutluc,delim_whitespace=True,header=None,skiprows=1)
+  lukc_table=pd.read_csv(lutkc,delim_whitespace=True,header=None,skiprows=1)
+  #print lulc_table[1]
+  watershed_shapefile=watershed_shapefile
+  head,tail=os.path.split(str(lancover_raster))
+  print(tail)
+  from osgeo import gdal
+  import numpy as np
+  ds = gdal.Open(str(tail))
+  band =  ds.GetRasterBand(1)
+  myarray = (band.ReadAsArray())
+  unique_values = np.unique(myarray)
+
+  features = fiona.open(watershed_shapefile)
+  grid_code=[]
+  for feat in features:
+     grid_code.append(feat['properties']['ID'])
+  basin_num=len(grid_code)
+  #this function need for calculating land use land cover with look up table
+  def reclassify_and_stats_raster(input_raster,lookup_table_in,lookup_table_out,watershed_shapefile):
+    input_raster= input_raster
+    ds = gdal.Open(input_raster)
+    band = ds.GetRasterBand(1)
+    classification_values =lookup_table_in
+    classification_output_values = lookup_table_out
+#
+
+    block_sizes = band.GetBlockSize()
+    x_block_size = block_sizes[0]
+    y_block_size = block_sizes[1]
+
+    xsize = band.XSize
+    ysize = band.YSize
+
+    max_value = band.GetMaximum()
+    min_value = band.GetMinimum()
+
+    if max_value == None or min_value == None:
+      stats = band.GetStatistics(0, 1)
+      max_value = stats[1]
+      min_value = stats[0]
+
+    format = "GTiff"
+    driver = gdal.GetDriverByName( format )
+    dst_ds = driver.Create("temp.tif", xsize, ysize, 1, gdal.GDT_Float32 )
+    dst_ds.SetGeoTransform(ds.GetGeoTransform())
+    dst_ds.SetProjection(ds.GetProjection())
+
+    for i in range(0, ysize, y_block_size):
+      if i + y_block_size < ysize:
+        rows = y_block_size
+      else:
+        rows = ysize - i
+    for j in range(0, xsize, x_block_size):
+        if j + x_block_size < xsize:
+            cols = x_block_size
+        else:
+            cols = xsize - j
+
+        data = band.ReadAsArray(j, i, cols, rows)
+        r = zeros((rows, cols), numpy.uint8)
+
+        for k in range(len(classification_values) - 1):
+            if classification_values[k] <= max_value and (classification_values[k + 1] > min_value ):
+                r = r + classification_output_values[k] * logical_and(data >= classification_values[k], data < classification_values[k + 1])
+        if classification_values[k + 1] < max_value:
+            r = r + classification_output_values[k+1] * (data >= classification_values[k + 1])
+
+        dst_ds.GetRasterBand(1).WriteArray(r,j,i)
+
+    dst_ds = None
+    stats2 = zonal_stats(watershed_shapefile, "temp.tif",stats=['mean'])
+    mean_val=([d['mean'] for d in stats2])
+    result = pd.DataFrame(mean_val)
+    return(result)
+
+  #nodfile_data=pd.read_csv(nodelinkfile,header=None)
+  df = pd.DataFrame(grid_code,columns=[str('DrainId')])
+  for i in range(0,data_length):
+    soil_pro_file=input_datalist[1][i]
+    print(soil_pro_file)
+    if(soil_pro_file==0):
+        print (input_datalist[2][i])
+        stats = zonal_stats(watershed_shapefile, str(input_datalist[2][i]),stats=['mean'])
+        mean_val=([d['mean'] for d in stats])
+        df1 = pd.DataFrame(mean_val)
+        df[str(input_datalist[0][i])]=df1
+    elif(soil_pro_file==2):
+         col_ind=int(input_datalist[4][i])
+         df2=pd.DataFrame(reclassify_and_stats_raster(str(input_datalist[2][i]),unique_values,np.array(lulc_table[col_ind]),watershed_shapefile))
+
+         df[str(input_datalist[0][i])]=df2
+    elif(soil_pro_file==1):
+         col_ind=int(input_datalist[4][i])
+         df3=pd.DataFrame(reclassify_and_stats_raster(str(input_datalist[2][i]),unique_values,np.array(lukc_table[col_ind]),watershed_shapefile))
+         df[str(input_datalist[0][i])]=df3
+
+    else:
+        val=[input_datalist[2][i]]*basin_num
+        df4 = pd.DataFrame(val,dtype=np.float32)
+        df[str(input_datalist[0][i])]=df4
+
+  #print(df)
+  nodfile_data=pd.read_csv(nodelinkfile, dtype= {'NodeId':np.int,'DownNodeId':np.int,'DrainId':np.int,'ProjNodeId':np.int,'DOutFlag':np.int,'ReachId':np.int,'Area':np.float32,'AreaTotal':np.float32,'X':np.float32,'Y':np.float32})
+  nd_df = pd.DataFrame(nodfile_data)
+  #print (nd_df)
+ # CatchID,DownCatchID,DrainID,NodeId,Reach_number,Outlet_X,Outlet_Y,direct_area,
+
+  df.columns = ['DrainId', 'f', 'ko','dth1','dth2','soildepth','c','psif','chv','cc','cr','albedo','LapseRate','AverageElevation','ImperviousFraction','TileDrainedFraction','DitchDrainedFraction',
+               'TileCoeff','DitchCoef','IrrigatedFraction','SprinklerFractionofIrrigation','IrrigationEfficiency','D_Thres','Z_Max','D_Goal',
+                'kc_1','kc_2','kc_3','kc_4','kc_5','kc_6','kc_7','kc_8','kc_9','kc_10','kc_11','kc_12','Transmissivity','FractionForest']
+  nd_df.columns = ['NodeId', 'DownNodeId' , 'DrainId' , 'ProjNodeId',  'DOutFlag', 'ReachId','Area','AreaTotal', 'X','Y']
+
+  result = pd.merge(df,nd_df,
+         left_on=['DrainId'],
+         right_on=['DrainId'],
+         how='inner')
+  result.sort_index(by=['NodeId'], ascending=[True],inplace=True)
+  dd=result.ix[:,1:data_length]
+  print(dd)
+  node_df=nd_df[['NodeId', 'DownNodeId','DrainId','ProjNodeId','X','Y' ,'ReachId','Area']]
+  print (node_df)
+  node_df['Area'].multiply(100000, level=1)
+  #nd_df[:6]= nd_df[:6]*1000000
+
+  result2 = pd.concat([node_df,dd], axis=1)
+  result2.to_csv(output_basinfile, header=True, index=None, sep=',', mode='w')
+
+
+
+##example:
+
+
+
+def BASIN_PARAM(DEM_Raster,Watershed_Raster,f_raster,k_raster,dth1_raster,dth2_raster,sd_raster,psif_raster,tran_raster,lulc_raster,
+                lutlc,lutkc,parameter_specficationfile,nodelinksfile,output_basinfile):
+
+    head0,tail0=os.path.split(str(DEM_Raster))
+    head1,tail2=os.path.split(str(f_raster))
+    head2,tail2=os.path.split(str(k_raster))
+    head3,tail3=os.path.split(str(dth1_raster))
+    head4,tail4=os.path.split(str(dth2_raster))
+    head5,tail5=os.path.split(str(sd_raster))
+    head6,tail6=os.path.split(str(tran_raster))
+    head7,tail7=os.path.split(str(psif_raster))
+    head8,tail8=os.path.split(str(lulc_raster))
+    head9,tail9=os.path.split(str(lutlc))
+    head10,tail10=os.path.split(str(lutkc))
+    head,tail=os.path.split(str(Watershed_Raster))
+    In_Out_dir=str(head)
+
+
+
+
+    In_Out_dir=str(head0)
+    base_name=os.path.basename(DEM_Raster)
+    Input_Dem=os.path.splitext(base_name)[0]
+    retDictionary=call_subprocess(PITREMOVE(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem),'pitremove')
+    if retDictionary['success'] == "False":
+        return retDictionary
+    #head,tail=os.path.split(str(Watershed_Raster))
+    # #head_ps,tail_ps=os.path.split(str(parameterfile))
+    Dem_dir=str(head0)
+
+    #Dem_base=os.path.basename(Watershed_Raster)
+    #Dem_name=os.path.splitext(str(Dem_base))[0]
+    # commands=[]
+    # #commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(1))
+    # commands.append(os.path.join(Exe_dir,"BasinParammeter"))
+    # commands.append("-me");commands.append(Watershed_Raster)
+    # commands.append("-parspec");commands.append(parameter_specficationfile)
+    # commands.append("-node");commands.append(nodelinksfile)
+    # commands.append("-mpar");commands.append( output_basinfile)
+    # fused_command = ''.join(['"%s" ' % c for c in commands])
+    # os.chdir( In_Out_dir)
+    # print (fused_command)
+    #print(head)
+    os.chdir(head)
+    Raster_to_Polygon(tail)
+    print('test1done')
+    #os.chdir(head)
+    dissolve_polygon(tail,'final.shp',head)
+    print('test2done')
+    create_basin_param('final.shp',lulc_raster,lutlc,lutkc,parameter_specficationfile,nodelinksfile,output_basinfile)
+
+   # os.system(fused_command)
+
+    return {'success': 'True', 'message': 'download LULC data  successful'}
+
+
+
+##example:
+
+#Raster_to_Polygon('WhLA10WS.tif')
+#dissolve_polygon('WhLA10WS.tif','final.shp')
+#create_basin_param('final.shp','lulcmmef.tif','lutluc.txt','lutkc.txt','demC22param.txt','nodelinks.txt','basin.txt')
 
 
 

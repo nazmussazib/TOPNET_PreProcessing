@@ -345,7 +345,7 @@ funcs = {
                  {
                    'function_to_execute': CommonLib.daymet_download,
                    'file_inputs': [],
-                   'file_outputs': [{'output_rainfile': 'rain.dat','output_temperaturefile': 'tmaxtmintdew.dat','output_cliparfile':'clipar.dat'}],
+                   'file_outputs': [{'output_rainfile': 'rain.dat','output_temperaturefile': 'tmaxtmintdew.dat','output_cliparfile':'clipar.dat','output_gagefile':'rain_gage.shp'}],
                    'user_inputs': ['Start_Year', 'End_Year'],
                    'user_file_inputs': ['Watershed_Raster'],
                    'validator': DownloadClimatedataRequestValidator
@@ -357,7 +357,7 @@ funcs = {
                  {
                    'function_to_execute': CommonLib.download_Soil_Data,
                    'file_inputs': [],
-                   'file_outputs': [{'output_f_file':'f.tif','output_k_file':'ko.tif','output_dth1_file': 'dth1.tif','output_dth2_file':'dth2.tif','output_psif_file':'psif.tif','output_sd_file': 'sd.tif','output_Tran_file':'Trans.tif'}],
+                   'file_outputs': [{'output_f_file':'f.tif','output_k_file':'ko.tif','output_dth1_file': 'dth1.tif','output_dth2_file':'dth2.tif','output_psif_file':'psif.tif','output_sd_file': 'sd.tif','output_tran_file':'trans.tif'}],
                    'user_inputs': [ ],
                    'user_file_inputs': ['Soil_Raster'],
                    'validator': DownloadSoildataRequestValidator
@@ -371,7 +371,7 @@ funcs = {
                  {
                    'function_to_execute': CommonLib.watershed_delineation,
                    'file_inputs': [],
-                   'file_outputs': [{'output_pointoutletshapefile':'moved_outlets.shp','output_watershedfile': 'Delineated_Watershed.tif','output_treefile':'Stream_tree.txt','output_coordfile': 'Stream_coord.txt','output_slopareafile':'SlopeAreaRatio.tif','output_distancefile':'DistanceStream.tif'}],
+                   'file_outputs': [{'output_pointoutletshapefile':'moved_outlets.shp','output_watershedfile': 'Delineated_Watershed.tif','output_treefile':'Stream_tree.txt','output_coordfile': 'Stream_coord.txt','output_streamnetfile':'Streamnet.shp','output_slopareafile':'SlopeAreaRatio.tif','output_distancefile':'DistanceStream.tif'}],
                    'user_inputs': ['Src_threshold','Min_threshold','Max_threshold','Number_threshold'],
                    'user_file_inputs': ['DEM_Raster','Outlet_shapefile'],
                    'validator': WatershedDelineationdataRequestValidator
@@ -456,7 +456,7 @@ funcs = {
                    'file_inputs': [],
                    'file_outputs': [{'output_basinfile':'basinpars.txt' }],
                    'user_inputs': [],
-                   'user_file_inputs': ['DEM_Raster','f_raster','k_raster','dth1_raster','dth2_raster','sd_raster','tran_raster','lulc_raster','lutlc','lutkc', 'Watershed_Raster','parameter_specficationfile','nodelinksfile'],
+                   'user_file_inputs': ['DEM_Raster','f_raster','k_raster','dth1_raster','dth2_raster','sd_raster','psif_raster','tran_raster','lulc_raster','lutlc','lutkc', 'Watershed_Raster','parameter_specficationfile','nodelinksfile'],
                    'validator': createbasinparameterdataRequestValidator
                 },
 
