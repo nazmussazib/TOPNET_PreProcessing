@@ -328,8 +328,8 @@ class DownloadClimatedataRequestValidator(serializers.Serializer):
         return value
 
 class DownloadSoildataRequestValidator(serializers.Serializer):
-    Soil_Raster = serializers.URLField(required=True)
-
+ 
+    Watershed_Raster = serializers.URLField(required=True)
     output_f_file = serializers.CharField(required=True)
     output_dth1_file = serializers.CharField(required=True)
     output_dth2_file = serializers.CharField(required=True)
@@ -387,6 +387,7 @@ class ReachLinkdataRequestValidator(serializers.Serializer):
     coordfile = serializers.URLField(required=True)
 
     output_reachfile= serializers.CharField(required=True)
+    output_reachareafile= serializers.CharField(required=True)
     output_nodefile = serializers.CharField(required=True)
     output_rchpropertiesfile = serializers.CharField(required=True)
 
@@ -396,13 +397,15 @@ class dist_wetness_distributiondataRequestValidator(serializers.Serializer):
     Dist_Raster= serializers.URLField(required=True)
     output_distributionfile= serializers.CharField(required=True)
 
-class getlanduselandcoverdataRequestValidator(serializers.Serializer):
+class getprismrainfalldataRequestValidator(serializers.Serializer):
     Watershed_Raster = serializers.URLField(required=True)
-    output_LULCRaster = serializers.URLField(required=True)
+    output_raster = serializers.CharField(required=True)
 
 class createrainweightdataRequestValidator(serializers.Serializer):
     Watershed_Raster = serializers.URLField(required=True)
-    Rain_gauge_shapefile = serializers.CharField(required=True)
+    Rain_gauge_shapefile = serializers.URLField(required=True)
+    nodelink_file=serializers.URLField(required=True)
+    annual_rainfile=serializers.URLField(required=True)
     output_rainweightfile = serializers.CharField(required=True)
 class createbasinparameterdataRequestValidator(serializers.Serializer):
     Watershed_Raster = serializers.URLField(required=True)

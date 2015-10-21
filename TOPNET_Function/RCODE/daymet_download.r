@@ -8,6 +8,7 @@ require(shapefiles)
 require(dldir)
 require(spsurvey)
 require(DaymetR)
+require(tools)
 #setwd('E:\\USU_Research_work\\TOPNET_Web_Processing\\TOPNET_Web_services\\Test_Results\\DelineatedWatershed')
 setwd(args[1])
 newproj="+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs +ellps=GRS80 +towgs84=0,0,0"
@@ -21,10 +22,12 @@ top=rasterToPoints(z)
 print("essspsruvey")
 lat_lon_rg1=albersgeod(top[,1], top[,2], sph="GRS80", clon=-96, clat=23, sp1=29.5, sp2=45.5)
 print("nospsruvey")
+shapefile=file_path_sans_ext(args[5])
+df2=data.frame(X=lat_lon_rg1[,1],Y=lat_lon_rg1[,2],ID=as.integer(seq(1,length(top[,1]),1)))
 
-df2=data.frame(X=top[,1],Y=top[,2],ID=as.integer(seq(1,length(top[,1]),1)))
-lots <- SpatialPointsDataFrame( coords = cbind(df2$X,df2$Y), data = df2) 
-writeOGR( lots, dsn = ".", layer=args[5],driver='ESRI Shapefile',overwrite=TRUE)
+
+lots <- SpatialPointsDataFrame( coords = cbind(df2$X,df2$Y), data = df2,proj4string=CRS(as.character("+proj=longlat +datum=WGS84"))) 
+writeOGR( lots, dsn = ".", layer=shapefile,driver='ESRI Shapefile',overwrite=TRUE)
 
 
 len=(nrow(lat_lon_rg1))

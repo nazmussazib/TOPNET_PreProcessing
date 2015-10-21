@@ -5,6 +5,10 @@ from numpy import logical_and
 import pandas as pd
 import  os
 import time
+from shapely.geometry import Point, LineString, mapping, shape
+from shapely.ops import cascaded_union
+import fiona
+from fiona import collection
 from osgeo import ogr,osr,gdal
 import rasterio.features
 from numpy import *
@@ -15,6 +19,7 @@ from shapely.ops import unary_union
 import fiona
 import itertools
 from osgeo import gdal
+import os
 import sys
 from rasterstats import zonal_stats
 start_time = time.time()
@@ -38,8 +43,8 @@ MPI_dir='/usr/local/bin'
 np=8
 TauDEM_dir='/home/ahmet/ciwater/usu_data_service/topnet_data_service/TauDEM'
 Exe_dir='/home/ahmet/ciwater/usu_data_service/topnet_data_service/TOPNET_Basin_Properties'
-Base_Data_dir='/home/ahmet/ciwater/usu_data_service/topnet_data_service/Base_Data/'
-
+Base_Data_dir_prism='/home/ahmet/hydosdata/PRISM_annual/PRISM_annual_projected.tif'
+Base_Data_dir_Soil=os.path.join('/home/ahmet/hydosdata/gSSURGO','soil_mukey_westernUS.tif')
 def watershed_delineation(DEM_Raster,Outlet_shapefile,Src_threshold,Min_threshold,Max_threshold,Number_threshold, output_pointoutletshapefile,output_watershedfile,output_treefile,output_coordfile,output_streamnetfile,output_slopareafile,output_distancefile):
 
     head,tail=os.path.split(str(DEM_Raster))
@@ -335,7 +340,7 @@ def DISTANCE_DOWNSTREAM(MPI_dir,np,TauDEM_dir,In_Out_dir,Input_Dem,output_distan
 
 
 
-def REACH_LINK(DEM_Raster,Watershed_Raster,treefile,coordfile,output_reachfile,output_nodefile,output_rchpropertiesfile):
+def REACH_LINK(DEM_Raster,Watershed_Raster,treefile,coordfile,output_reachfile,output_nodefile,output_reachareafile,output_rchpropertiesfile):
     head,tail=os.path.split(str(DEM_Raster))
     In_Out_dir=str(head)
     base_name=os.path.basename(DEM_Raster)
@@ -358,7 +363,7 @@ def REACH_LINK(DEM_Raster,Watershed_Raster,treefile,coordfile,output_reachfile,o
     commands.append("-nodelink");commands.append(os.path.join(In_Out_dir, output_nodefile))
     commands.append("-nc");commands.append(os.path.join(In_Out_dir, Input_Dem+"nc.tif"))
     commands.append("-dc");commands.append(os.path.join(In_Out_dir, Input_Dem+"dc.tif"))
-    commands.append("-rca");commands.append(os.path.join(In_Out_dir, "rchareas.txt"))
+    commands.append("-rca");commands.append(os.path.join(In_Out_dir, output_reachareafile))
     commands.append("-rcp");commands.append(os.path.join(In_Out_dir, output_rchpropertiesfile))
     fused_command = ''.join(['"%s" ' % c for c in commands])
     #return fused_command
@@ -384,16 +389,48 @@ def DISTANCE_DISTRIBUTION(Watershed_Raster,SaR_Raster,Dist_Raster,output_distrib
 
 # """download soil data """
 
-def download_Soil_Data(Soil_Raster,output_f_file,output_k_file,output_dth1_file,output_dth2_file,output_psif_file,output_sd_file,output_tran_file):
-    head,tail=os.path.split(str(Soil_Raster))
+def download_Soil_Data(Watershed_Raster,output_f_file,output_k_file,output_dth1_file,output_dth2_file,output_psif_file,output_sd_file,output_tran_file):
+    head,tail=os.path.split(str(Watershed_Raster))
+    ##headsoil,tailsoil=os.path.split(str(Soil_Raster))
+   
+    os.chdir(head)
     wateshed_Dir=str(head)
     watershed_raster_name=str(tail)
+    cmd1="gdaltindex clipper.shp"+" "+ Watershed_Raster
+    os.system(cmd1)
+    soil_output_file=os.path.join(head,'Soil_mukey.tif')
+    cdf="gdalwarp -cutline clipper.shp -dstnodata NA -crop_to_cutline"+" "+ Base_Data_dir_Soil  +" "+"Soil_mukey.tif"
+    os.system(cdf)
+    #os.chdir(head)
+    # Raster_to_Polygon(tail)
+    #infile_crs=[]
+    #with fiona.open('temp'+'.shp') as source:
+    #  projection = source.crs
+    #  infile_crs.append(projection)
+    #print(projection)
+    # os.chdir(head)
+    #polygon_dissolve('temp','final',infile_crs[0])    
+    #outputBufferfn='final.shp'
+    #soil_output_file=os.path.join(head,'Soil_mukey.tif')
+   
+    #input = fiona.open(outputBufferfn, 'r')
+    #xmin=str(input.bounds[0])
+    #print(xmin)
+    #ymin=str(input.bounds[1])
+    #xmax=str(input.bounds[2])
+    #ymax=str(input.bounds[3])
+    #layer_name=os.path.splitext(outputBufferfn)[0]
+    #print(ymax)
+    ##command_flow="gdalwarp -te " + xmin + " " + ymin + " " + xmax + " " + ymax + " -dstnodata -32768.000 -cutline " +  outputBufferfn + " -cl "+ layer_name + " " + Soil_Raster + " " + soil_output_file
+    #cdf="gdalwarp -cutline final.shp -dstnodata NA -crop_to_cutline"+" "+ Base_Data_dir_Soil  +" "+'Soil_mukey.tif'
+    #os.system(cdf)
+   
 
     Soil_script = os.path.join(R_Code_Path,'Extract_Soil_Data.r')
-
+    heads,tails=os.path.split(str(soil_output_file))
     commands=[]
     commands.append("Rscript");commands.append(Soil_script);commands.append(str(wateshed_Dir))
-    commands.append(str(watershed_raster_name));commands.append(str(output_f_file))
+    commands.append(str(tails));commands.append(str(output_f_file))
     commands.append(str(output_k_file));commands.append(str(output_dth1_file))
     commands.append(str(output_dth2_file));commands.append(str(output_psif_file))
     commands.append(str(output_sd_file));commands.append(str(output_tran_file))
@@ -441,9 +478,10 @@ def daymet_download(Watershed_Raster,Start_Year,End_Year,output_rainfile,output_
 
 
 
-def getLULCdata(Watershed_Raster,output_LULCRaster):
-    nlcd_Raster=(os.path.join(Base_Data_dir,'nlcd2011CONUS.tif'))
-    subset_raster_to_referenceRaster(nlcd_Raster, output_LULCRaster,Watershed_Raster)
+def getprismdata(Watershed_Raster,output_raster):
+    prism_Raster=(Base_Data_dir_prism)
+    head,tail=os.path.split(str(Watershed_Raster))
+    subset_raster_to_referenceRaster(prism_Raster,Watershed_Raster,output_raster)
     return {'success': 'True', 'message': 'download LULC data  successful'}
 ## under consideration
 
@@ -460,7 +498,7 @@ def Create_Parspcfile(Watershed_Raster,output_parspcfile):
     os.system(fused_command)
     return {'success': 'True', 'message': 'download LULC data  successful'}
 
-def create_latlonfromxy(Watershed_Raster,output_lalonfromxyfile):
+def create_latlonfromxy(Watershed_Raster,output_latlonfromxyfile):
     head,tail=os.path.split(str(Watershed_Raster))
     watershed_dir=str(head)
     wateshed_name=str(tail)
@@ -468,40 +506,41 @@ def create_latlonfromxy(Watershed_Raster,output_lalonfromxyfile):
     commands=[]
     commands.append("Rscript");commands.append(latlonxy_script)
     commands.append(str(watershed_dir));commands.append(str(wateshed_name))
-    commands.append(str(output_lalonfromxyfile))
+    commands.append(str(output_latlonfromxyfile))
     fused_command = ''.join(['"%s" ' % c for c in commands])
     os.system(fused_command)
     return {'success': 'True', 'message': 'download LULC data  successful'}
 
 
-def Create_rain_weight(Watershed_Raster,Rain_gauge_shapefile,output_rainweightfile):
+def Create_rain_weight(Watershed_Raster,Rain_gauge_shapefile,annual_rainfile,nodelink_file,output_rainweightfile):
     head,tail=os.path.split(str(Watershed_Raster))
     watershed_dir=str(head)
     wateshed_name=str(tail)
     head_rg,tail_rg=os.path.split(str(Rain_gauge_shapefile))
+    head_nd,tail_nd=os.path.split(str(nodelink_file))
+    head_an,tail_an=os.path.split(str(annual_rainfile))
     Rain_GaugeDir=str(head_rg)
 
-    prism_script= os.path.join(R_Code_Path,'annrain_prism.r')
-    commands=[]
-    commands.append("Rscript");commands.append(prism_script)
-    commands.append(str(Base_Data_dir))
-    commands.append(str(watershed_dir));commands.append(str(wateshed_name))
-    fused_command = ''.join(['"%s" ' % c for c in commands])
-    os.system(fused_command)
+    #subset_raster_to_referenceRaster(Base_Data_dir_prism,os.path.join(watershed_dir,'annrain.tif'),Watershed_Raster)
+   # prism_script= os.path.join(R_Code_Path,'annrain_prism.r')
+
+   
+
     commands=[]
     commands.append(os.path.join(Exe_dir,"RainWeight"))
     commands.append("-w");commands.append(os.path.join(watershed_dir, wateshed_name))
-    commands.append("-rg");commands.append(os.path.join(Rain_GaugeDir, "Rain_Gauge.shp"))
-    commands.append("-ar");commands.append(os.path.join(watershed_dir, "annrain.tif"))
-    commands.append("-tri");commands.append(os.path.join(watershed_dir, "triout.tif"))
-    commands.append("-wt");commands.append(os.path.join(watershed_dir, "weights.txt"))
+    commands.append("-rg");commands.append(os.path.join(Rain_GaugeDir,tail_rg))
+    commands.append("-ar");commands.append(os.path.join(watershed_dir,tail_an))
+    commands.append("-tri");commands.append(os.path.join(watershed_dir,"triout.tif"))
+    commands.append("-wt");commands.append(os.path.join(watershed_dir,"weights.txt"))
     fused_command1 = ''.join(['"%s" ' % c for c in commands])
     os.system(fused_command1)
 
     format_rainweight_script= os.path.join(R_Code_Path,'format_rainweight.R')
     commands=[]
     commands.append("Rscript");commands.append(format_rainweight_script)
-    commands.append(str(watershed_dir));commands.append(str(output_rainweightfile))
+    commands.append(str(watershed_dir)); commands.append(str(tail_nd))
+    commands.append(str(output_rainweightfile))
     fused_command2 = ''.join(['"%s" ' % c for c in commands])
     os.system(fused_command2)
     return {'success': 'True', 'message': 'Creating rainweight file successful'}
@@ -576,6 +615,7 @@ def Raster_to_Polygon(input_file):
    #print(myarray)
    T0 = Affine.from_gdal(*src_ds.GetGeoTransform())
    tx=[T0[0], T0[1], T0[2], T0[3],T0[4], T0[5]]
+   print(tx)
    epsg_code=[]
    #if (src.IsProjected()):
       #  ds=epsg_code.append(int(src.GetAuthorityCode("PROJCS")))
@@ -605,8 +645,8 @@ def Raster_to_Polygon(input_file):
      drv.DeleteDataSource('temp.shp')
 
    dst_layername ='temp'
-   dst_ds = drv.CreateDataSource('temp'+ ".shp" )
-
+   dst_ds = drv.CreateDataSource('temp'+ ".shp" )  
+   print(dst_ds)
    dst_layer = dst_ds.CreateLayer(dst_layername, srs=target)
    gdal.Polygonize( srcband,srd, dst_layer, -1, [], callback=None)
    src_ds=None
@@ -695,7 +735,7 @@ def dissolve_polygon(input_raster,output_file,dir):
             output.write({'geometry': mapping(unary_union(geom)), 'properties': properties[0]})
 def create_basin_param(watershed_shapefile,lancover_raster,lutluc,lutkc,paramfile,nodelinkfile,output_basinfile):
 
-  input_datalist=pd.read_csv(paramfile,header=None)
+  input_datalist=pd.read_csv(paramfile,header=None,error_bad_lines=False)
   data_length=len(input_datalist.index)
   print(data_length)
   #print input_datalist[0][1]
@@ -743,7 +783,7 @@ def create_basin_param(watershed_shapefile,lancover_raster,lutluc,lutkc,paramfil
 
     format = "GTiff"
     driver = gdal.GetDriverByName( format )
-    dst_ds = driver.Create("temp.tif", xsize, ysize, 1, gdal.GDT_Float32 )
+    dst_ds = driver.Create("temp.tif", xsize, ysize, 1, gdal.GDT_Float64 )
     dst_ds.SetGeoTransform(ds.GetGeoTransform())
     dst_ds.SetProjection(ds.GetProjection())
 
@@ -752,7 +792,7 @@ def create_basin_param(watershed_shapefile,lancover_raster,lutluc,lutkc,paramfil
         rows = y_block_size
       else:
         rows = ysize - i
-    for j in range(0, xsize, x_block_size):
+      for j in range(0, xsize, x_block_size):
         if j + x_block_size < xsize:
             cols = x_block_size
         else:
@@ -783,6 +823,7 @@ def create_basin_param(watershed_shapefile,lancover_raster,lutluc,lutkc,paramfil
     if(soil_pro_file==0):
         print (input_datalist[2][i])
         stats = zonal_stats(watershed_shapefile, str(input_datalist[2][i]),stats=['mean'])
+        
         mean_val=([d['mean'] for d in stats])
         df1 = pd.DataFrame(mean_val)
         df[str(input_datalist[0][i])]=df1
@@ -802,8 +843,10 @@ def create_basin_param(watershed_shapefile,lancover_raster,lutluc,lutkc,paramfil
         df[str(input_datalist[0][i])]=df4
 
   #print(df)
-  nodfile_data=pd.read_csv(nodelinkfile, dtype= {'NodeId':np.int,'DownNodeId':np.int,'DrainId':np.int,'ProjNodeId':np.int,'DOutFlag':np.int,'ReachId':np.int,'Area':np.float32,'AreaTotal':np.float32,'X':np.float32,'Y':np.float32})
+  nodfile_data=pd.read_csv(nodelinkfile, dtype= {'NodeId':np.int,'DownNodeId':np.int,'DrainId':np.int,'ProjNodeId':np.int,'DOutFlag':np.int,'ReachId':np.int,'Area':np.float64,'AreaTotal':np.float64,'X':np.float64,'Y':np.float64})
   nd_df = pd.DataFrame(nodfile_data)
+  nd_df.columns = ['NodeId', 'DownNodeId' , 'DrainId' , 'ProjNodeId',  'DOutFlag', 'ReachId','Area','AreaTotal', 'X','Y']
+  nd_df['Area']=nd_df['Area']*1000000
   #print (nd_df)
  # CatchID,DownCatchID,DrainID,NodeId,Reach_number,Outlet_X,Outlet_Y,direct_area,
 
@@ -817,14 +860,11 @@ def create_basin_param(watershed_shapefile,lancover_raster,lutluc,lutkc,paramfil
          right_on=['DrainId'],
          how='inner')
   result.sort_index(by=['NodeId'], ascending=[True],inplace=True)
-  dd=result.ix[:,1:data_length]
+  dd=result.ix[:,1:(data_length+1)]
   print(dd)
   node_df=nd_df[['NodeId', 'DownNodeId','DrainId','ProjNodeId','X','Y' ,'ReachId','Area']]
-  print (node_df)
-  node_df['Area'].multiply(100000, level=1)
-  #nd_df[:6]= nd_df[:6]*1000000
-
   result2 = pd.concat([node_df,dd], axis=1)
+  #result2['Area']=result2['Area']*float(1000000)
   result2.to_csv(output_basinfile, header=True, index=None, sep=',', mode='w')
 
 
@@ -865,23 +905,24 @@ def BASIN_PARAM(DEM_Raster,Watershed_Raster,f_raster,k_raster,dth1_raster,dth2_r
 
     #Dem_base=os.path.basename(Watershed_Raster)
     #Dem_name=os.path.splitext(str(Dem_base))[0]
-    # commands=[]
-    # #commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(1))
-    # commands.append(os.path.join(Exe_dir,"BasinParammeter"))
-    # commands.append("-me");commands.append(Watershed_Raster)
-    # commands.append("-parspec");commands.append(parameter_specficationfile)
-    # commands.append("-node");commands.append(nodelinksfile)
-    # commands.append("-mpar");commands.append( output_basinfile)
-    # fused_command = ''.join(['"%s" ' % c for c in commands])
-    # os.chdir( In_Out_dir)
+    #commands=[]
+    ##commands.append(os.path.join(MPI_dir,"mpirun"));commands.append("-np");commands.append(str(1))
+   # commands.append(os.path.join(Exe_dir,"BasinParammeter"))
+    #commands.append("-me");commands.append(Watershed_Raster)
+    #commands.append("-parspec");commands.append(parameter_specficationfile)
+   # commands.append("-node");commands.append(nodelinksfile)
+    #commands.append("-mpar");commands.append( output_basinfile)
+   # fused_command = ''.join(['"%s" ' % c for c in commands])
+    #os.chdir( In_Out_dir)
     # print (fused_command)
+    #os.system(fused_command)
     #print(head)
     os.chdir(head)
     Raster_to_Polygon(tail)
-    print('test1done')
+    #print('test1done')
     #os.chdir(head)
     dissolve_polygon(tail,'final.shp',head)
-    print('test2done')
+    #print('test2done')
     create_basin_param('final.shp',lulc_raster,lutlc,lutkc,parameter_specficationfile,nodelinksfile,output_basinfile)
 
    # os.system(fused_command)
@@ -895,9 +936,6 @@ def BASIN_PARAM(DEM_Raster,Watershed_Raster,f_raster,k_raster,dth1_raster,dth2_r
 #Raster_to_Polygon('WhLA10WS.tif')
 #dissolve_polygon('WhLA10WS.tif','final.shp')
 #create_basin_param('final.shp','lulcmmef.tif','lutluc.txt','lutkc.txt','demC22param.txt','nodelinks.txt','basin.txt')
-
-
-
 
 
 

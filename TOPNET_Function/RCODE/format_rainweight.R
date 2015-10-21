@@ -6,10 +6,10 @@ rw= read.table("weights.txt", sep=",", col.names=c("Basiin", "gauge","weight"), 
 rw=rw[-1,]
 rw_frame=data.frame(rw)
 rw_uniq=as.numeric(as.character((unique(rw_frame$Basiin))))
-basin_par= as.matrix(read.table("nodelinks.txt", sep=",", col.names=c('NodeId', 'DownNodeId', 'DrainId', 'ProjNodeId', 'DOutFlag', 'ReachId', 'Area', 'AreaTotal', 'X', 'Y'), fill=FALSE, strip.white=FALSE))
+basin_par= as.matrix(read.table(args[2], sep=",", col.names=c('NodeId', 'DownNodeId', 'DrainId', 'ProjNodeId', 'DOutFlag', 'ReachId', 'Area', 'AreaTotal', 'X', 'Y'), fill=FALSE, strip.white=FALSE))
 basin_par=basin_par[-1,]
 drain_ID=as.numeric(basin_par[,3])
-filename=args[2]
+filename=args[3]
 sink(filename)
 cat(sprintf("Subcatchment - raingauge relationship"),file=filename,append=TRUE)
 cat("\n", file=filename, append=TRUE)

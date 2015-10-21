@@ -31,7 +31,7 @@ dss=data.frame(time=gh)
 hr=rep.int(240000, nrow(dss))
 observed_flow=data.frame(streamflow,dss[,1],hr)
 print("start Writing")
-filename=args[[5]
+filename=args[5]
 sink(filename)
 cat(sprintf("This file provides mean daily values of streamflow"),file=filename,append=TRUE)
 cat("\n", file=filename, append=TRUE)

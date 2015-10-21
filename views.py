@@ -359,7 +359,7 @@ funcs = {
                    'file_inputs': [],
                    'file_outputs': [{'output_f_file':'f.tif','output_k_file':'ko.tif','output_dth1_file': 'dth1.tif','output_dth2_file':'dth2.tif','output_psif_file':'psif.tif','output_sd_file': 'sd.tif','output_tran_file':'trans.tif'}],
                    'user_inputs': [ ],
-                   'user_file_inputs': ['Soil_Raster'],
+                   'user_file_inputs': ['Watershed_Raster'],
                    'validator': DownloadSoildataRequestValidator
                 },
 
@@ -384,7 +384,7 @@ funcs = {
                  {
                    'function_to_execute': CommonLib.REACH_LINK,
                    'file_inputs': [],
-                   'file_outputs': [{'output_reachfile':'rchlink.txt','output_nodefile': 'nodelinks.txt','output_rchpropertiesfile': 'rchproperties.txt'}],
+                   'file_outputs': [{'output_reachfile':'rchlink.txt','output_nodefile': 'nodelinks.txt','output_reachareafile': 'rchareas.txt','output_rchpropertiesfile': 'rchproperties.txt'}],
                    'user_inputs': [],
                    'user_file_inputs': ['DEM_Raster','Watershed_Raster','treefile','coordfile'],
                    'validator': ReachLinkdataRequestValidator
@@ -405,15 +405,15 @@ funcs = {
 
 
 
-          'getlanduselandcoverdata':
+          'getprismrainfall':
 
                  {
-                   'function_to_execute': CommonLib.getLULCdata,
+                   'function_to_execute': CommonLib.getprismdata,
                    'file_inputs': [],
-                   'file_outputs': [{'output_LULCRaster':'LULC_Watershed.tif' }],
+                   'file_outputs': [{'output_raster':'annrain.tif' }],
                    'user_inputs': [],
                    'user_file_inputs': ['Watershed_Raster'],
-                   'validator': getlanduselandcoverdataRequestValidator
+                   'validator': getprismrainfalldataRequestValidator
                 },
 
           'createlatlonfromxy':
@@ -444,7 +444,7 @@ funcs = {
                    'file_inputs': [],
                    'file_outputs': [{'output_rainweightfile':'rainweights.txt' }],
                    'user_inputs': [],
-                   'user_file_inputs': ['Watershed_Raster','Rain_gauge_shapefile'],
+                   'user_file_inputs': ['Watershed_Raster','Rain_gauge_shapefile','annual_rainfile','nodelink_file'],
                    'validator': createrainweightdataRequestValidator
                 },
 
@@ -650,7 +650,7 @@ def create_hydroshare_resource(request):
     else:
         raise NotFound()
 
-    hs_url = 'http://www.hydroshare.org/hsapi/resource'
+    hs_url = 'https://www.hydroshare.org/hsapi/resource'
     payload = {'resource_type': resource_type}
     if title:
         payload['title'] = title
