@@ -475,6 +475,7 @@ class HydroDS(object):
             }
         ]
         """
+
         url = self._get_dataservice_specific_url('showstaticdata/info')
         response = self._make_data_service_request(url=url)
         return self._process_dataservice_response(response, save_as=None)
@@ -2364,16 +2365,15 @@ class HydroDS(object):
             int(end_year)
         except:
             raise Exception("Error:Invalid end year. Year must be an integer value.")
+
         if not self._is_file_name_valid(output_streamflow, ext='.dat'):
-            raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_streamflow))
-        if not self._is_file_name_valid(output_streamflow, ext='.txt'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_streamflow))
 
         url = self._get_dataservice_specific_url('downloadstreamflow')
         if end_year > start_year:
-             payload = {"USGS_gage": usgs_gage, 'Start_Year': start_year, "End_Year": end_year}
+             payload = {"USGS_gage": usgs_gage, 'Start_Year': start_year, "End_Year": end_year,"output_streamflow":output_streamflow}
         else:
-             payload = {"USGS_gage": usgs_gage, 'Start_Year': end_year, "End_Year": start_year}
+             payload = {"USGS_gage": usgs_gage, 'Start_Year': end_year, "End_Year": start_year,"output_streamflow":output_streamflow}
 
         response = self._make_data_service_request(url, params=payload)
         return self._process_dataservice_response(response, save_as)
@@ -2381,7 +2381,7 @@ class HydroDS(object):
 
 
 
-    def delineate_watershed_peuker_douglas(self, input_raster_url_path, threshold, peuker_min_threshold,peuker_max_threshold,peuker_number_threshold,output_watershed_raster,output_outlet_shapefile,output_treefile,output_coordfile,output_slope_raster,output_distance_raster,
+    def delineate_watershed_peuker_douglas(self, input_raster_url_path, threshold, peuker_min_threshold,peuker_max_threshold,peuker_number_threshold,output_watershed_raster,output_outlet_shapefile,output_treefile,output_coordfile,output_streamnetfile,output_slopearea_raster,output_distance_raster,
                             epsg_code=None, outlet_point_x=None, outlet_point_y=None, input_outlet_shapefile_url_path=None, save_as=None):
 
         if save_as:
@@ -2391,20 +2391,22 @@ class HydroDS(object):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_watershed_raster))
 
 
-        if not self._is_file_name_valid(output_slope_raster, ext='.tif'):
-            raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_slope_raster))
+        if not self._is_file_name_valid(output_slopearea_raster, ext='.tif'):
+            raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_slopearea_raster))
 
         if not self._is_file_name_valid(output_distance_raster, ext='.tif'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_distance_raster))
 
-        if not self._is_file_name_valid(output_treefile, ext='.dat'):
+        if not self._is_file_name_valid(output_treefile, ext='.txt'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_treefile))
 
-        if not self._is_file_name_valid(output_coordfile, ext='.dat'):
+        if not self._is_file_name_valid(output_coordfile, ext='.txt'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_coordfile))
 
 
         if not self._is_file_name_valid(output_outlet_shapefile, ext='.shp'):
+            raise HydroDSArgumentException("{file_name} is not a valid shapefile name".format(file_name=output_outlet_shapefile))
+        if not self._is_file_name_valid(output_streamnetfile, ext='.shp'):
             raise HydroDSArgumentException("{file_name} is not a valid shapefile name".format(file_name=output_outlet_shapefile))
         try:
             int(threshold)
@@ -2433,14 +2435,14 @@ class HydroDS(object):
         if input_outlet_shapefile_url_path:
            payload = {'Src_threshold': threshold, 'Min_threshold': peuker_min_threshold,'Max_threshold': peuker_max_threshold,'Number_threshold':peuker_number_threshold,'DEM_Raster': input_raster_url_path,
                        'Outlet_shapefile': input_outlet_shapefile_url_path,
-                       'output_watershedfile': output_watershed_raster, 'output_pointoutletshapefile': output_outlet_shapefile,'output_treefile':output_treefile,'output_coordfile':output_coordfile,'output_slopareafile':output_slope_raster,'output_distancefile':output_distance_raster}
+                       'output_watershedfile': output_watershed_raster, 'output_pointoutletshapefile': output_outlet_shapefile,'output_treefile':output_treefile,'output_coordfile':output_coordfile,'output_streamnetfile':output_streamnetfile,'output_slopareafile':output_slopearea_raster,'output_distancefile':output_distance_raster}
         else:
             response_data = self.create_outlet_shapefile(point_x=outlet_point_x, point_y=outlet_point_y, output_shape_file_name='outlet-shape.shp')
             output_outlet_shapefile_url = response_data['output_shape_file_name']
             #url = self._get_dataservice_specific_url(service_name='watersheddelineation')
             payload = {'Src_threshold': threshold, 'Min_threshold': peuker_min_threshold,'Max_threshold': peuker_max_threshold,'Number_threshold':peuker_number_threshold,'DEM_Raster': input_raster_url_path,
                        'outlet_shapefile': output_outlet_shapefile_url,
-                       'output_watershedfile': output_watershed_raster, 'output_pointoutletshapefile': output_outlet_shapefile,'output_treefile':output_treefile,'output_coordfile':output_coordfile,'output_slopareafile':output_slope_raster,'output_distancefile':output_distance_raster}
+                       'output_watershedfile': output_watershed_raster, 'output_pointoutletshapefile': output_outlet_shapefile,'output_treefile':output_treefile,'output_coordfile':output_coordfile,'output_streamnetfile':output_streamnetfile,'output_slopareafile':output_slopearea_raster,'output_distancefile':output_distance_raster}
 
 
 
@@ -2449,11 +2451,13 @@ class HydroDS(object):
 
 
 
-    def get_daymet_data(self, input_raster_url_path,start_year, end_year,output_rainfile,output_temperaturefile,output_cliparfile,save_as=None):
+    def get_daymet_data(self, input_raster_url_path,start_year, end_year,output_gagefile,output_rainfile,output_temperaturefile,output_cliparfile,save_as=None):
 
 
         if save_as:
             self._validate_file_save_as(save_as)
+        if not self._is_file_name_valid(output_gagefile, ext='.shp'):
+            raise HydroDSArgumentException("{file_name} is not a valid shapefile name".format(file_name=output_gagefile))
 
         if not self._is_file_name_valid(output_rainfile, ext='.dat'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_rainfile))
@@ -2478,15 +2482,15 @@ class HydroDS(object):
         url = self._get_dataservice_specific_url('downloadclimatedata')
 
         if end_year > start_year:
-            payload = {"Watershed_Raster": input_raster_url_path, "Start_Year": start_year, "End_Year": end_year,"output_rainfile":output_rainfile,"output_temperaturefile":output_temperaturefile,"output_cliparfile":output_cliparfile}
+            payload = {"Watershed_Raster": input_raster_url_path, "Start_Year": start_year, "End_Year": end_year,"output_gagefile":output_gagefile,"output_rainfile":output_rainfile,"output_temperaturefile":output_temperaturefile,"output_cliparfile":output_cliparfile}
         else:
-            payload = {"Watershed_Raster": input_raster_url_path, "Start_Year": end_year, "End_Year": start_year,"output_rainfile":output_rainfile,"output_temperaturefile":output_temperaturefile,"output_cliparfile":output_cliparfile}
+            payload = {"Watershed_Raster": input_raster_url_path, "Start_Year": end_year, "End_Year": start_year,"output_gagefile":output_gagefile,"output_rainfile":output_rainfile,"output_temperaturefile":output_temperaturefile,"output_cliparfile":output_cliparfile}
 
         response = self._make_data_service_request(url, params=payload)
         return self._process_dataservice_response(response, save_as)
 
 
-    def get_soil_data(self, input_raster_url_path,output_f_raster,output_k_raster,output_dth1_raster,
+    def get_soil_data(self,input_watershed_raster_url_path,output_f_raster,output_k_raster,output_dth1_raster,
                      output_dth2_raster,output_psif_raster,output_sd_raster,output_tran_raster,save_as=None):
 
         if save_as:
@@ -2508,10 +2512,10 @@ class HydroDS(object):
         if not self._is_file_name_valid(output_tran_raster, ext='.tif'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_tran_raster))
 
-
         url = self._get_dataservice_specific_url(service_name='downloadsoildata')
-        payload = {'Soil_Raster': input_raster_url_path, 'output_f_file': output_f_raster,'output_k_file': output_k_raster,
-                       'output_dth1_file': output_dth1_raster,'output_dth2_file': output_dth2_raster,  'output_psif_file': output_psif_raster,'output_sd_file': output_sd_raster,'output_Tran_file': output_tran_raster}
+        payload = {'Watershed_Raster':input_watershed_raster_url_path, 'output_f_file': output_f_raster,'output_k_file': output_k_raster,
+                       'output_dth1_file': output_dth1_raster,'output_dth2_file': output_dth2_raster, 'output_psif_file': output_psif_raster,
+                       'output_sd_file': output_sd_raster,'output_tran_file': output_tran_raster}
 
         response = self._make_data_service_request(url=url, params=payload)
         return self._process_dataservice_response(response, save_as)
@@ -2519,26 +2523,28 @@ class HydroDS(object):
 
 
 
-    def reachlink(self, input_DEM_raster_url_path,input_watershed_raster_url_path,input_treefile,input_coordfile,output_reachfile,output_nodefile,output_rchpropertiesfile,save_as=None):
+    def reachlink(self, input_DEM_raster_url_path,input_watershed_raster_url_path,input_treefile,input_coordfile,output_reachfile,output_nodefile,output_reachareafile,output_rchpropertiesfile,save_as=None):
 
         if save_as:
             self._validate_file_save_as(save_as)
 
-        if not self._is_file_name_valid(output_reachfile, ext='.dat'):
+        if not self._is_file_name_valid(output_reachfile, ext='.txt'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_reachfile))
 
 
-        if not self._is_file_name_valid(output_nodefile, ext='.dat'):
+        if not self._is_file_name_valid(output_nodefile, ext='.txt'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_nodefile))
 
-        if not self._is_file_name_valid(output_rchpropertiesfile, ext='.dat'):
+        if not self._is_file_name_valid(output_rchpropertiesfile, ext='.txt'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_rchpropertiesfile))
+        if not self._is_file_name_valid(output_reachareafile, ext='.txt'):
+            raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_reachareafile))
 
 
 
         url = self._get_dataservice_specific_url(service_name='reachlink')
         payload = {'DEM_Raster': input_DEM_raster_url_path,'Watershed_Raster':input_watershed_raster_url_path,'treefile':input_treefile,'coordfile':input_coordfile,
-                   'output_reachfile': output_reachfile,'output_nodefile': output_nodefile,'output_rchpropertiesfile':output_rchpropertiesfile}
+                   'output_reachfile': output_reachfile,'output_nodefile': output_nodefile,'output_reachareafile': output_reachareafile,'output_rchpropertiesfile':output_rchpropertiesfile}
 
         response = self._make_data_service_request(url=url, params=payload)
         return self._process_dataservice_response(response, save_as)
@@ -2549,8 +2555,7 @@ class HydroDS(object):
         if save_as:
             self._validate_file_save_as(save_as)
 
-        if not self._is_file_name_valid(output_distributionfile, ext='.dat'):
-            raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_distributionfile))
+
         if not self._is_file_name_valid(output_distributionfile, ext='.txt'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_distributionfile))
 
@@ -2580,8 +2585,7 @@ class HydroDS(object):
 
         if save_as:
             self._validate_file_save_as(save_as)
-        if not self._is_file_name_valid(output_file, ext='.dat'):
-            raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_file))
+
         if not self._is_file_name_valid(output_file, ext='.txt'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_file))
 
@@ -2596,8 +2600,6 @@ class HydroDS(object):
 
         if save_as:
             self._validate_file_save_as(save_as)
-        if not self._is_file_name_valid(output_file, ext='.dat'):
-            raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_file))
         if not self._is_file_name_valid(output_file, ext='.txt'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_file))
 
@@ -2609,19 +2611,18 @@ class HydroDS(object):
 
 
 
-    def create_rainweight(self, input_watershed_raster_url_path, input_raingauge_shapefile_url_path, output_rainweightfile,
+    def create_rainweight(self, input_watershed_raster_url_path, input_raingauge_shapefile_url_path, input_annual_rainfile,input_nodelink_file,output_rainweightfile,
                            save_as=None):
 
         if save_as:
             self._validate_file_save_as(save_as)
-        if not self._is_file_name_valid(output_rainweightfile, ext='.dat'):
-            raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_rainweightfile))
+
         if not self._is_file_name_valid(output_rainweightfile, ext='.txt'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_rainweightfile))
 
         url = self._get_dataservice_specific_url(service_name='createrainweight')
-        payload = { "input_DEM_raster":input_watershed_raster_url_path,
-                   'Rain_gauge_shapefile': input_raingauge_shapefile_url_path,'output_rainweightfile':output_rainweightfile}
+        payload = { "Watershed_Raster":input_watershed_raster_url_path,
+                   'Rain_gauge_shapefile': input_raingauge_shapefile_url_path,'annual_rainfile':input_annual_rainfile,'nodelink_file':input_nodelink_file,'output_rainweightfile':output_rainweightfile}
 
         response = self._make_data_service_request(url=url, params=payload)
         return self._process_dataservice_response(response, save_as)
@@ -2629,21 +2630,21 @@ class HydroDS(object):
 
 
     def create_basinparamterfile(self,input_DEM_raster_url_path,input_watershed_raster_url_path,input_f_url_path,input_dth1_url_path,input_dth2_url_path,input_k_url_path,
-
-       input_lulc_url_path,input_lutlc_url_path,input_lutkc_url_path,input_parameterspecfile_url_path,input_nodelinksfile_url_path, output_basinparameterfile,
-                           save_as=None):
+       input_sd_url_path,input_psif_url_path,input_tran_url_path,
+       input_lulc_url_path,input_lutlc_url_path,input_lutkc_url_path,input_parameterspecfile_url_path,input_nodelinksfile_url_path, output_basinparameterfile,save_as=None):
 
         if save_as:
             self._validate_file_save_as(save_as)
-        if not self._is_file_name_valid( output_basinparameterfile, ext='.dat'):
-            raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_basinparameterfile))
+
         if not self._is_file_name_valid(output_basinparameterfile, ext='.txt'):
             raise HydroDSArgumentException("{file_name} is not a valid raster file name".format(file_name=output_basinparameterfile))
 
         url = self._get_dataservice_specific_url(service_name='createbasinparameter')
-        payload = { "DEM_Raster":input_DEM_raster_url_path,"f_raster":input_f_url_path,"k_raster":input_k_url_path,
-                    "dth1_raster":input_dth1_url_path,"dth2_raster":input_dth2_url_path,"lulc_raster":input_lulc_url_path, "lutlc":input_lutlc_url_path,"lutkc":input_lutkc_url_path,
-                    "Watershed_Raster":input_watershed_raster_url_path,'parameter_specficationfile': input_parameterspecfile_url_path,'nodelinksfile':input_nodelinksfile_url_path}
+        payload = {'DEM_Raster':input_DEM_raster_url_path,'f_raster':input_f_url_path,'k_raster':input_k_url_path,
+                    'dth1_raster':input_dth1_url_path,'dth2_raster':input_dth2_url_path,'sd_raster':input_sd_url_path,'psif_raster':input_psif_url_path,
+                    'tran_raster':input_tran_url_path,'lulc_raster':input_lulc_url_path, 'lutlc':input_lutlc_url_path,'lutkc':input_lutkc_url_path,
+                    'Watershed_Raster':input_watershed_raster_url_path,'parameter_specficationfile': input_parameterspecfile_url_path,
+                    'nodelinksfile':input_nodelinksfile_url_path,'output_basinfile':output_basinparameterfile}
 
         response = self._make_data_service_request(url=url, params=payload)
         return self._process_dataservice_response(response, save_as)
