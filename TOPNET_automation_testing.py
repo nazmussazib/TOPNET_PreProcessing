@@ -185,6 +185,6 @@ usgs_gage_number='10109001'
 hs_title = 'TOPNET input package for the watershed'
 hs_abstract = hs_title +'It was created by the CI-WATER HydroDS' + 'Input variables were re-sampled into '+ ' m grid cells'
 hs_keywords=['HydroShare', 'HydroDS', 'DEM', 'LoganWS']
-HDS.set_hydroshare_account(username='Nazmus', password='nss3142_25')
+HDS.set_hydroshare_account(username='Nazmus', password='')
 HDS.create_hydroshare_resource(file_name='topenet.zip', resource_type ='GenericResource', title= hs_title, abstract= hs_abstract, keywords= hs_keywords)
 # print('Finished TOPNET input setup')
