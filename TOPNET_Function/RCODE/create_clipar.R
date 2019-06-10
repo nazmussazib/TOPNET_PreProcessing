@@ -1,11 +1,12 @@
 args<-commandArgs(TRUE)
+dyn.load('/usr/local/lib/libgeos_c.so', local=FALSE)
 library(zoo)
 library(hydroTSM)
 library(rgeos)
 library(proj4)
 library(rgdal)
 library(raster)
-library(shapefiles)
+#library(shapefiles)
 require(spsurvey)
 
 dir=args[1]
@@ -28,7 +29,7 @@ start_year=args[2]
 end_year=args[3]
 #end_year="2010"
 for (i in 1:nc){
-  xx[i]=paste("filename",i,"_",args[2],"_",args[3],".csv",sep="")
+  xx[i]=paste(dir, "/","filename",i,"_",args[2],"_",args[3],".csv",sep="")
 }
 rainfall <- function(file ){
   mydata2 = read.csv(file,skip=7)
@@ -50,22 +51,25 @@ Elevation<- function(file ){
   return(ele)
 }
 
-Ele_station=matrix(ncol =1, nrow = nc)
+Ele_station=matrix(NA,len,1)
 
-
+print(length(xx))
 dates=seq(as.Date(paste(start_year,"/1/1",sep="")), as.Date(paste(end_year,"/12/31",sep="")), "day") ##assume that daymet data would be always completed by one year
 strDates= as.character(dates)
 gh=gsub("-","", strDates, fixed=TRUE)
 dss=data.frame(time=gh)
 hr=rep.int(240000, nrow(dss))
 
-
-for ( m in 1:length(xx)){
+print(400)
+print(xx[35])
+for ( m in 1:(length(xx))){
   hjk=rainfall(xx[m])
   Ele_station[m,]=Elevation(xx[m])
+  
   dss=cbind(dss,hjk)
+  print(m)
 }
-
+print(900)
 min_temp=dss[,seq(4,ncol(dss),4)]
 max_temp=dss[,seq(3,ncol(dss),4)]
 avgT=0.5*(max_temp+min_temp)
@@ -74,9 +78,11 @@ avgT=0.5*(max_temp+min_temp)
 
 station_monthly<- data.frame(monthlyfunction(avgT, FUN=mean, na.rm=TRUE,dates=dates))
 station_annual<- t(as.matrix(annualfunction(avgT, FUN=mean, na.rm=TRUE,dates=dates)))
-sta_ID=seq(1,nc,1)
-sta_ele=rep(-999,nc)
+sta_ID=seq(1,len,1)
+sta_ele=rep(-999,len)
+print((lat_lon_rg1[,2]))
 station_monthly=cbind(sta_ID,lat_lon_rg1[,2],lat_lon_rg1[,1],sta_ele,station_monthly)
+print(500)
 lapse_mat=cbind(Ele_station,station_annual)
 dddd=lm(lapse_mat[,2]~lapse_mat[,1])
 station_monthly[,4]=lapse_mat[,1]
